@@ -6,432 +6,314 @@
     <title>Vanguard Defense: Strategic Planning Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #e2e8f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 1rem;
+            padding: 2rem 1rem;
             box-sizing: border-box;
         }
-        .game-container {
-            background-color: #1e293b;
-            border: 2px solid #334155;
-            border-radius: 1rem;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
-            width: 100%;
-            max-width: 1400px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            height: 95vh;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
         }
-        .header {
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            padding: 1.5rem;
-            border-bottom: 2px solid #334155;
+        .status-big {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
             text-align: center;
         }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #f0f9ff;
-            margin: 0 0 0.5rem 0;
+        .metric-large {
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 0.5rem;
         }
-        .action-points-display {
-            background-color: rgba(251, 191, 36, 0.2);
-            border: 2px solid #fbbf24;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            display: inline-block;
-            margin-top: 0.5rem;
+        .metric-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .action-points-display strong {
+        .runway-warning {
             color: #fbbf24;
             font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 1rem;
         }
-        .main-content {
-            display: flex;
-            flex-grow: 1;
-            padding: 1rem;
-            gap: 1rem;
-            overflow: hidden;
+        .runway-critical {
+            color: #ef4444;
+            animation: pulse 1.5s ease-in-out infinite;
         }
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            overflow-y: auto;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .status-panel {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 0.75rem;
-            padding: 1.25rem;
+        .action-points {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0f172a;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            display: inline-block;
+            margin: 1.5rem 0;
         }
-        .status-panel h3 {
+        .action-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-card:hover:not(.disabled) {
+            border-color: rgba(59, 130, 246, 0.6);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+        }
+        .action-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: rgba(100, 116, 139, 0.2);
+        }
+        .action-title {
             font-size: 1.3rem;
             font-weight: 700;
             color: #60a5fa;
-            margin: 0 0 1rem 0;
-            text-align: center;
-            border-bottom: 2px solid #334155;
-            padding-bottom: 0.5rem;
-        }
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.7rem;
-            padding: 0.5rem;
-            background-color: #1e293b;
-            border-radius: 0.5rem;
-            border-left: 3px solid #3b82f6;
-        }
-        .status-label {
-            color: #94a3b8;
-            font-size: 0.9rem;
-        }
-        .status-value {
-            font-weight: 700;
-            color: #e0f2fe;
-            font-size: 0.95rem;
-        }
-        .change-indicator {
-            font-size: 0.75rem;
-            margin-left: 0.5rem;
-        }
-        .change-positive { color: #4ade80; }
-        .change-negative { color: #f87171; }
-        .products-panel {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 0.75rem;
-            padding: 1rem;
-        }
-        .products-panel h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #60a5fa;
-            margin: 0 0 0.75rem 0;
-            text-align: center;
-        }
-        .product-item {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background-color: #1e293b;
-            border-radius: 0.5rem;
-        }
-        .product-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #bfdbfe;
             margin-bottom: 0.5rem;
         }
-        .product-milestone {
-            font-size: 0.75rem;
+        .action-description {
             color: #94a3b8;
-            margin-top: 0.3rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
         }
-        .milestone-item {
+        .action-cost {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .action-impact {
+            display: inline-block;
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .details-section {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .details-toggle {
+            color: #60a5fa;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: rgba(59, 130, 246, 0.1);
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        .details-toggle:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .details-content {
+            display: none;
+        }
+        .details-content.show {
+            display: block;
+        }
+        .product-row {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.3rem;
-            margin-top: 0.2rem;
+            padding: 0.75rem;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
         }
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background-color: #334155;
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
             margin: 0.5rem 0;
         }
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            transition: width 0.3s ease;
+            transition: width 0.5s ease;
         }
-        .center-panel {
-            flex: 1.5;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .log-panel {
-            flex: 1;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse;
+        .milestone-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
         }
         .log-message {
-            margin-bottom: 0.6rem;
-            padding: 0.6rem;
-            border-radius: 0.4rem;
-            line-height: 1.5;
-            font-size: 0.9rem;
-        }
-        .log-message.system { 
-            color: #60a5fa; 
-            background-color: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.1);
             border-left: 3px solid #3b82f6;
-        }
-        .log-message.error { 
-            color: #f87171; 
-            background-color: rgba(248, 113, 113, 0.1);
-            border-left: 3px solid #ef4444;
-        }
-        .log-message.player { 
-            color: #84cc16; 
-            background-color: rgba(132, 204, 22, 0.1);
-            border-left: 3px solid #84cc16;
-        }
-        .log-message.success { 
-            color: #4ade80; 
-            background-color: rgba(74, 222, 128, 0.1);
-            border-left: 3px solid #22c55e;
-        }
-        .log-message.warning { 
-            color: #fbbf24; 
-            background-color: rgba(251, 191, 36, 0.1);
-            border-left: 3px solid #f59e0b;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
         .log-message.impact {
-            color: #c084fc;
-            background-color: rgba(192, 132, 252, 0.15);
-            border-left: 3px solid #a855f7;
-            font-weight: 500;
-        }
-        .command-panel {
-            background-color: #1e293b;
-            padding: 1rem;
-            border-top: 2px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 0.6rem;
-        }
-        .action-button {
-            padding: 0.75rem 0.5rem;
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            border: none;
-            border-radius: 0.5rem;
-            color: white;
-            font-size: 0.85rem;
+            background: rgba(192, 132, 252, 0.1);
+            border-left-color: #a855f7;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            position: relative;
         }
-        .action-button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        .log-message.success {
+            background: rgba(74, 222, 128, 0.1);
+            border-left-color: #4ade80;
         }
-        .action-button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+        .log-message.warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-left-color: #fbbf24;
         }
-        .action-cost {
-            display: block;
-            font-size: 0.7rem;
-            opacity: 0.8;
-            margin-top: 0.2rem;
+        .log-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
         }
-        .action-button.critical {
+        .btn-primary {
             background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.2s;
         }
-        .action-button.critical:hover:not(:disabled) {
-            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
         }
-        .tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #1e293b;
-            border: 1px solid #60a5fa;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            margin-bottom: 0.5rem;
-            display: none;
-            z-index: 100;
+        .goal-progress {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
         }
-        .action-button:hover .tooltip {
-            display: block;
+        .goal-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #334155;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .goal-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            transition: width 0.5s ease;
         }
 
-        @media (max-width: 1024px) {
-            .game-container {
-                height: auto;
-                max-height: none;
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0.5rem;
             }
-            .main-content {
-                flex-direction: column;
-                overflow-y: auto;
-                padding: 0.5rem;
-                gap: 0.75rem;
+            .metric-large {
+                font-size: 2.5rem;
             }
-            .left-panel {
-                flex: none;
-                gap: 0.75rem;
-                overflow-y: visible;
+            .action-title {
+                font-size: 1.1rem;
             }
-            .center-panel {
-                min-height: 40vh;
-                gap: 0.75rem;
-            }
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            .status-panel, .products-panel, .log-panel {
-                padding: 0.75rem;
-            }
-            .button-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.5rem;
-            }
-            .action-button {
-                padding: 0.6rem 0.4rem;
-                font-size: 0.75rem;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.2rem;
-            }
-            .action-button {
-                font-size: 0.7rem;
+            .action-card {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <h1>🛡️ Vanguard Defense Technologies</h1>
-            <div class="action-points-display">
-                <strong><span id="actionPoints">3</span> / 3</strong> Action Points Remaining
-            </div>
-        </div>
-        <div class="main-content">
-            <div class="left-panel">
-                <div class="status-panel">
-                    <h3>Company Status (Q<span id="statusQuarter">1</span> <span id="statusYear">2025</span>)</h3>
-                    <div class="status-item">
-                        <span class="status-label">💰 Cash:</span>
-                        <span id="statusCash" class="status-value">$0</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">⏳ Runway:</span>
-                        <span id="statusRunway" class="status-value">0 mo</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">📈 Valuation:</span>
-                        <span id="statusValuation" class="status-value">$0</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">💵 Revenue/mo:</span>
-                        <span id="statusRevenue" class="status-value">$0</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">🔥 Burn/mo:</span>
-                        <span id="statusBurn" class="status-value">$0</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">👥 Team:</span>
-                        <span id="statusTeam" class="status-value">0</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">😊 Morale:</span>
-                        <span id="statusMorale" class="status-value">0%</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">⭐ Reputation:</span>
-                        <span id="statusReputation" class="status-value">0%</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">🏛️ DoD Relations:</span>
-                        <span id="statusDoD" class="status-value">0%</span>
-                    </div>
+    <div class="container">
+        <!-- Big Status Display -->
+        <div class="status-big">
+            <div class="metric-label">Cash Reserves</div>
+            <div id="cashDisplay" class="metric-large">$2.0M</div>
+            <div id="runwayDisplay" class="runway-warning">8 months runway</div>
+            
+            <div class="goal-progress">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span class="metric-label">Current Valuation</span>
+                    <span class="metric-label">Goal: $1,000M</span>
                 </div>
-
-                <div class="products-panel">
-                    <h3>📦 Product Development</h3>
-                    <div id="productsContainer"></div>
+                <div id="valuationDisplay" style="font-size: 1.5rem; font-weight: 700; color: #a855f7;">$15M</div>
+                <div class="goal-bar">
+                    <div id="goalBar" class="goal-fill" style="width: 1.5%;"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="center-panel">
-                <div class="log-panel" id="logPanel"></div>
+        <!-- Quarter & Action Points -->
+        <div style="text-align: center;">
+            <div style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 1rem;">
+                Quarter <span id="quarterDisplay">1</span>, <span id="yearDisplay">2025</span>
+            </div>
+            <div class="action-points">
+                <span id="apDisplay">3</span> Actions Remaining
             </div>
         </div>
-        <div class="command-panel">
-            <div class="button-grid">
-                <button id="btnHire" class="action-button" onclick="processAction('hire')">
-                    Hire Team
-                    <span class="action-cost">Cost: $200K, 1 AP</span>
-                    <div class="tooltip">+5 people, +$50K burn, +morale, faster dev</div>
-                </button>
-                <button id="btnRaise" class="action-button" onclick="processAction('raise')">
-                    Raise Funding
-                    <span class="action-cost">1 AP</span>
-                    <div class="tooltip">Raise next round, dilution increases</div>
-                </button>
-                <button id="btnDevAI" class="action-button" onclick="processAction('dev_ai')">
-                    Develop AI
-                    <span class="action-cost">1 AP</span>
-                    <div class="tooltip">+20% progress on AI Surveillance</div>
-                </button>
-                <button id="btnDevDrone" class="action-button" onclick="processAction('dev_drone')">
-                    Develop Drones
-                    <span class="action-cost">Cost: $300K, 1 AP</span>
-                    <div class="tooltip">Start/progress Autonomous Drones</div>
-                </button>
-                <button id="btnContract" class="action-button" onclick="processAction('contract')">
-                    Bid Contract
-                    <span class="action-cost">Cost: $100K, 1 AP</span>
-                    <div class="tooltip">Req: 50% DoD, deployed product</div>
-                </button>
-                <button id="btnMarketing" class="action-button" onclick="processAction('marketing')">
-                    Marketing
-                    <span class="action-cost">Cost: $150K, 1 AP</span>
-                    <div class="tooltip">+reputation, +DoD relations</div>
-                </button>
-                <button id="btnOptimize" class="action-button" onclick="processAction('optimize')">
-                    Cut Costs
-                    <span class="action-cost">1 AP</span>
-                    <div class="tooltip">-15% burn, -morale</div>
-                </button>
-                <button class="action-button" onclick="showReport()">
-                    View Report
-                    <span class="action-cost">Free</span>
-                </button>
-                <button id="btnAdvance" class="action-button critical" onclick="advanceQuarter()">
-                    End Quarter ⏭️
-                    <span class="action-cost">Advances time</span>
-                </button>
+
+        <!-- Action Cards -->
+        <div id="actionsContainer">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Details Toggle -->
+        <div class="details-section">
+            <div class="details-toggle" onclick="toggleDetails('products')">
+                📦 View Product Progress
+            </div>
+            <div id="productsDetails" class="details-content">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="details-toggle" onclick="toggleDetails('metrics')">
+                📊 View All Metrics
+            </div>
+            <div id="metricsDetails" class="details-content">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="details-toggle" onclick="toggleDetails('log')">
+                📋 Recent Activity (Last 5)
+            </div>
+            <div id="logDetails" class="details-content">
+                <!-- Populated by JavaScript -->
             </div>
         </div>
+
+        <!-- End Quarter Button -->
+        <button class="btn-primary" onclick="advanceQuarter()">
+            End Quarter & Continue ⏭️
+        </button>
     </div>
 
     <script>
@@ -454,365 +336,305 @@
                     progress: 25, 
                     deployed: false, 
                     revenue: 100000,
-                    milestones: [
-                        {threshold: 60, label: 'Can demo to DoD', unlocked: false},
-                        {threshold: 80, label: 'Can bid contracts', unlocked: false},
-                        {threshold: 100, label: 'Deploy & earn revenue', unlocked: false}
-                    ]
+                    milestones: [60, 80, 100]
                 },
                 autonomousDrone: { 
                     name: 'Autonomous Drones', 
                     progress: 0, 
                     deployed: false, 
                     revenue: 150000,
-                    milestones: [
-                        {threshold: 60, label: 'Can demo', unlocked: false},
-                        {threshold: 100, label: 'Deploy & earn revenue', unlocked: false}
-                    ]
+                    milestones: [60, 100]
                 }
             },
-            lastChanges: {},
+            log: [],
             contracts: [],
             gameOver: false,
-            fundingRound: 'Seed',
-            competitorThreat: 50
+            fundingRound: 'Seed'
         };
 
-        const logPanel = document.getElementById('logPanel');
-
-        function logMessage(message, type) {
-            type = type || 'system';
-            const msgElement = document.createElement('div');
-            msgElement.classList.add('log-message', type);
-            msgElement.innerHTML = '[Q' + gameState.quarter + '] ' + message;
-            logPanel.prepend(msgElement);
-            while (logPanel.children.length > 40) {
-                logPanel.removeChild(logPanel.lastChild);
-            }
-        }
-
-        function trackChange(metric, oldVal, newVal) {
-            const diff = newVal - oldVal;
-            if (diff !== 0) {
-                gameState.lastChanges[metric] = diff;
-            }
-        }
-
-        function showChangeIndicator(metric) {
-            const change = gameState.lastChanges[metric];
-            if (!change) return '';
-            const className = change > 0 ? 'change-positive' : 'change-negative';
-            const symbol = change > 0 ? '+' : '';
-            return '<span class="change-indicator ' + className + '">' + symbol + change.toFixed(0) + '</span>';
-        }
-
-        function updateDisplay() {
-            document.getElementById('statusQuarter').textContent = gameState.quarter;
-            document.getElementById('statusYear').textContent = gameState.year;
-            document.getElementById('actionPoints').textContent = gameState.actionPoints;
-            
-            document.getElementById('statusCash').innerHTML = '$' + (gameState.cash / 1000000).toFixed(2) + 'M' + showChangeIndicator('cash');
-            
-            const runway = Math.max(0, Math.floor(gameState.cash / gameState.burnRate));
-            const runwayEl = document.getElementById('statusRunway');
-            runwayEl.innerHTML = runway + ' mo' + showChangeIndicator('runway');
-            runwayEl.style.color = runway >= 8 ? '#4ade80' : runway >= 4 ? '#fbbf24' : '#f87171';
-            
-            document.getElementById('statusValuation').innerHTML = '$' + (gameState.valuation / 1000000).toFixed(1) + 'M';
-            document.getElementById('statusRevenue').innerHTML = '$' + (gameState.revenue / 1000).toFixed(0) + 'K' + showChangeIndicator('revenue');
-            document.getElementById('statusBurn').innerHTML = '$' + (gameState.burnRate / 1000).toFixed(0) + 'K' + showChangeIndicator('burn');
-            document.getElementById('statusTeam').innerHTML = gameState.employees + showChangeIndicator('team');
-            document.getElementById('statusMorale').innerHTML = Math.round(gameState.morale) + '%' + showChangeIndicator('morale');
-            document.getElementById('statusReputation').innerHTML = Math.round(gameState.reputation) + '%' + showChangeIndicator('reputation');
-            document.getElementById('statusDoD').innerHTML = Math.round(gameState.dodRelations) + '%' + showChangeIndicator('dod');
-            
-            updateProductsDisplay();
-            updateButtonStates();
-        }
-
-        function updateProductsDisplay() {
-            const container = document.getElementById('productsContainer');
-            container.innerHTML = '';
-            
-            Object.keys(gameState.products).forEach(function(key) {
-                const product = gameState.products[key];
-                const productDiv = document.createElement('div');
-                productDiv.className = 'product-item';
-                
-                var html = '<div class="product-name">' + product.name + ': ' + product.progress + '% ' + (product.deployed ? '✅' : '') + '</div>';
-                html += '<div class="progress-bar"><div class="progress-fill" style="width: ' + product.progress + '%"></div></div>';
-                
-                product.milestones.forEach(function(milestone) {
-                    const reached = product.progress >= milestone.threshold;
-                    const icon = reached ? '✅' : '🔒';
-                    const style = reached ? 'color: #4ade80;' : 'color: #64748b;';
-                    html += '<div class="milestone-item" style="' + style + '">' + icon + ' ' + milestone.threshold + '%: ' + milestone.label + '</div>';
-                });
-                
-                productDiv.innerHTML = html;
-                container.appendChild(productDiv);
-            });
-        }
-
-        function updateButtonStates() {
-            const noAP = gameState.actionPoints <= 0;
-            
-            document.getElementById('btnHire').disabled = noAP || gameState.cash < 200000;
-            document.getElementById('btnRaise').disabled = noAP;
-            document.getElementById('btnDevAI').disabled = noAP || gameState.products.aiSurveillance.progress >= 100;
-            document.getElementById('btnDevDrone').disabled = noAP || gameState.cash < 300000;
-            
-            const hasDeployedProduct = Object.values(gameState.products).some(function(p) { return p.deployed; });
-            document.getElementById('btnContract').disabled = noAP || gameState.cash < 100000 || gameState.dodRelations < 50 || !hasDeployedProduct;
-            
-            document.getElementById('btnMarketing').disabled = noAP || gameState.cash < 150000;
-            document.getElementById('btnOptimize').disabled = noAP;
-        }
-
-        function spendActionPoint() {
-            if (gameState.actionPoints <= 0) return false;
-            gameState.actionPoints--;
-            return true;
-        }
-
-        function showImpact(action, immediate, consequence) {
-            logMessage('📊 <strong>IMPACT:</strong> ' + immediate, 'impact');
-            if (consequence) {
-                logMessage('⚡ <strong>CONSEQUENCE:</strong> ' + consequence, 'impact');
-            }
-        }
-
-        function processAction(action) {
-            if (gameState.actionPoints <= 0) {
-                logMessage('❌ No action points left! End quarter to continue.', 'error');
-                return;
-            }
-            
-            gameState.lastChanges = {};
-            
-            switch(action) {
-                case 'hire':
-                    if (gameState.cash < 200000) {
-                        logMessage('❌ Insufficient funds ($200K required)', 'error');
-                        return;
-                    }
-                    if (!spendActionPoint()) return;
-                    
-                    const oldTeam = gameState.employees;
-                    const oldBurn = gameState.burnRate;
-                    const oldMorale = gameState.morale;
-                    
+        const actions = [
+            {
+                id: 'hire',
+                title: '👥 Hire Engineering Team',
+                description: 'Bring on 5 engineers to accelerate product development',
+                cost: '$200K + $50K/mo burn',
+                impact: '+25% dev speed, +morale',
+                apCost: 1,
+                canUse: function() { return gameState.cash >= 200000; },
+                execute: function() {
                     gameState.cash -= 200000;
                     gameState.employees += 5;
                     gameState.burnRate += 50000;
                     gameState.morale = Math.min(100, gameState.morale + 10);
-                    
-                    trackChange('team', oldTeam, gameState.employees);
-                    trackChange('burn', oldBurn / 1000, gameState.burnRate / 1000);
-                    trackChange('morale', oldMorale, gameState.morale);
-                    
-                    logMessage('> Hired 5 engineers', 'player');
-                    showImpact('Team grows stronger', 'Team: ' + oldTeam + '→' + gameState.employees + ', Burn: +$50K/mo, Morale: +10%', 
-                               'All products will develop 25% faster next quarter');
-                    break;
-                    
-                case 'raise':
-                    if (!spendActionPoint()) return;
-                    
-                    var funding, newRound, dilution;
+                    addLog('Hired 5 engineers. Team: ' + gameState.employees + ', Burn: +$50K/mo', 'success');
+                    addLog('IMPACT: All products develop 25% faster next quarter', 'impact');
+                }
+            },
+            {
+                id: 'raise',
+                title: '💰 Raise Funding',
+                description: 'Secure next funding round to extend runway',
+                cost: function() { 
+                    if (gameState.fundingRound === 'Seed') return '15% dilution';
+                    if (gameState.fundingRound === 'Series A') return '12% dilution';
+                    return '10% dilution';
+                },
+                impact: '+$5-30M cash',
+                apCost: 1,
+                canUse: function() { return true; },
+                execute: function() {
+                    var funding, newRound;
                     if (gameState.fundingRound === 'Seed') {
                         funding = 5000000;
                         newRound = 'Series A';
-                        dilution = 20;
                     } else if (gameState.fundingRound === 'Series A') {
                         funding = 15000000;
                         newRound = 'Series B';
-                        dilution = 15;
                     } else {
                         funding = 30000000;
                         newRound = 'Series C';
-                        dilution = 12;
                     }
-                    
-                    const oldCash = gameState.cash;
                     gameState.cash += funding;
                     gameState.valuation = Math.floor(gameState.valuation * 1.6);
                     gameState.fundingRound = newRound;
-                    
-                    trackChange('cash', oldCash / 1000000, gameState.cash / 1000000);
-                    
-                    logMessage('> Raised ' + newRound, 'player');
-                    showImpact('Funding secured', '+$' + (funding/1000000) + 'M cash, Valuation: $' + (gameState.valuation/1000000).toFixed(1) + 'M',
-                               'You gave up ' + dilution + '% equity. Investors expect faster growth now.');
-                    break;
-                    
-                case 'dev_ai':
-                    if (!spendActionPoint()) return;
-                    
-                    const oldProgress = gameState.products.aiSurveillance.progress;
+                    addLog('Raised ' + newRound + ': +$' + (funding/1000000) + 'M cash', 'success');
+                    addLog('IMPACT: Valuation now $' + (gameState.valuation/1000000).toFixed(1) + 'M. Investors expect growth.', 'impact');
+                }
+            },
+            {
+                id: 'dev_ai',
+                title: '🤖 Develop AI Surveillance',
+                description: 'Focus team effort on AI product development',
+                cost: 'No cost',
+                impact: '+20-25% progress',
+                apCost: 1,
+                canUse: function() { return gameState.products.aiSurveillance.progress < 100; },
+                execute: function() {
                     const boost = gameState.employees >= 15 ? 25 : 20;
-                    gameState.products.aiSurveillance.progress = Math.min(100, oldProgress + boost);
-                    
-                    logMessage('> Focused on AI development', 'player');
-                    
-                    var consequence = 'Drone development will be slower while focusing on AI';
-                    gameState.products.aiSurveillance.milestones.forEach(function(m) {
-                        if (!m.unlocked && gameState.products.aiSurveillance.progress >= m.threshold) {
-                            m.unlocked = true;
-                            consequence = '🎉 UNLOCKED: ' + m.label + '!';
-                        }
-                    });
-                    
-                    showImpact('AI development accelerated', 'Progress: ' + oldProgress + '%→' + gameState.products.aiSurveillance.progress + '%', consequence);
-                    break;
-                    
-                case 'dev_drone':
-                    if (gameState.cash < 300000) {
-                        logMessage('❌ Insufficient funds ($300K required)', 'error');
-                        return;
-                    }
-                    if (!spendActionPoint()) return;
-                    
+                    gameState.products.aiSurveillance.progress = Math.min(100, gameState.products.aiSurveillance.progress + boost);
+                    addLog('AI Surveillance: +' + boost + '% (now ' + gameState.products.aiSurveillance.progress + '%)', 'success');
+                    checkMilestones('aiSurveillance');
+                }
+            },
+            {
+                id: 'dev_drone',
+                title: '🚁 Develop Drones',
+                description: 'Invest in autonomous drone technology (higher risk, higher reward)',
+                cost: '$300K',
+                impact: '+15-20% progress',
+                apCost: 1,
+                canUse: function() { return gameState.cash >= 300000; },
+                execute: function() {
                     gameState.cash -= 300000;
-                    const oldDroneProgress = gameState.products.autonomousDrone.progress;
-                    gameState.products.autonomousDrone.progress = Math.min(100, Math.max(oldDroneProgress, 20) + 15);
-                    
-                    logMessage('> Invested in drone technology', 'player');
-                    showImpact('Drone program progressing', 'Progress: ' + oldDroneProgress + '%→' + gameState.products.autonomousDrone.progress + '%',
-                               'This is a risky bet - drones are harder than AI but higher reward');
-                    break;
-                    
-                case 'contract':
-                    if (gameState.cash < 100000) {
-                        logMessage('❌ Insufficient funds ($100K required)', 'error');
-                        return;
-                    }
+                    const oldProgress = gameState.products.autonomousDrone.progress;
+                    gameState.products.autonomousDrone.progress = Math.min(100, Math.max(oldProgress, 20) + 15);
+                    addLog('Drone program: +15% (now ' + gameState.products.autonomousDrone.progress + '%)', 'success');
+                    addLog('IMPACT: High-risk bet. Drones worth more revenue than AI if successful.', 'impact');
+                }
+            },
+            {
+                id: 'contract',
+                title: '📋 Bid DoD Contract',
+                description: 'Compete for Department of Defense contract',
+                cost: '$100K',
+                impact: 'Win = +$250K/mo revenue',
+                apCost: 1,
+                canUse: function() { 
                     const hasDeployed = Object.values(gameState.products).some(function(p) { return p.deployed; });
-                    if (!hasDeployed) {
-                        logMessage('❌ Need a deployed product to bid contracts', 'error');
-                        return;
-                    }
-                    if (gameState.dodRelations < 50) {
-                        logMessage('❌ DoD relations too low (need 50%)', 'error');
-                        return;
-                    }
-                    if (!spendActionPoint()) return;
-                    
+                    return gameState.cash >= 100000 && gameState.dodRelations >= 50 && hasDeployed;
+                },
+                execute: function() {
                     gameState.cash -= 100000;
                     const winChance = (gameState.dodRelations * 0.6) + (gameState.reputation * 0.4);
-                    
-                    logMessage('> Bid on DoD contract', 'player');
-                    logMessage('📊 Win chance: ' + winChance.toFixed(0) + '% = (DoD ' + gameState.dodRelations.toFixed(0) + '% × 0.6) + (Rep ' + gameState.reputation.toFixed(0) + '% × 0.4)', 'system');
+                    addLog('Contract bid submitted. Win chance: ' + winChance.toFixed(0) + '%', 'system');
                     
                     if (Math.random() * 100 < winChance) {
                         const contractValue = Math.floor(Math.random() * 1000000) + 1500000;
-                        gameState.contracts.push({value: contractValue, quarter: gameState.quarter});
-                        const oldRevenue = gameState.revenue;
                         gameState.revenue += Math.floor(contractValue / 6);
-                        gameState.reputation = Math.min(100, gameState.reputation + 15);
-                        gameState.dodRelations = Math.min(100, gameState.dodRelations + 10);
                         gameState.valuation = Math.floor(gameState.valuation * 1.2);
-                        
-                        trackChange('revenue', oldRevenue / 1000, gameState.revenue / 1000);
-                        
-                        showImpact('CONTRACT WON!', 'Value: $' + (contractValue/1000000).toFixed(1) + 'M, Revenue: +$' + (contractValue/6000).toFixed(0) + 'K/mo',
-                                   'This validates your product and opens doors to bigger contracts');
+                        addLog('CONTRACT WON! +$' + (contractValue/6000).toFixed(0) + 'K/mo revenue', 'success');
+                        addLog('IMPACT: Validates product. Opens doors to bigger contracts.', 'impact');
                     } else {
-                        const oldRep = gameState.reputation;
-                        gameState.reputation = Math.max(0, gameState.reputation - 5);
-                        trackChange('reputation', oldRep, gameState.reputation);
-                        showImpact('Contract bid FAILED', 'Lost $100K in pursuit costs',
-                                   'Reputation dinged. Build stronger DoD relations before next bid.');
+                        addLog('Contract bid failed. Lost $100K in pursuit costs.', 'error');
                     }
-                    break;
-                    
-                case 'marketing':
-                    if (gameState.cash < 150000) {
-                        logMessage('❌ Insufficient funds ($150K required)', 'error');
-                        return;
-                    }
-                    if (!spendActionPoint()) return;
-                    
+                }
+            },
+            {
+                id: 'marketing',
+                title: '📣 Marketing Campaign',
+                description: 'Increase brand awareness and DoD visibility',
+                cost: '$150K',
+                impact: '+reputation, +DoD relations',
+                apCost: 1,
+                canUse: function() { return gameState.cash >= 150000; },
+                execute: function() {
                     gameState.cash -= 150000;
-                    const oldRep = gameState.reputation;
-                    const oldDoD = gameState.dodRelations;
                     gameState.reputation = Math.min(100, gameState.reputation + 12);
                     gameState.dodRelations = Math.min(100, gameState.dodRelations + 8);
-                    
-                    trackChange('reputation', oldRep, gameState.reputation);
-                    trackChange('dod', oldDoD, gameState.dodRelations);
-                    
-                    logMessage('> Launched marketing campaign', 'player');
-                    showImpact('Brand visibility increased', 'Reputation: +12%, DoD relations: +8%',
-                               'Better positioning for next contract bid or partnership');
-                    break;
-                    
-                case 'optimize':
-                    if (!spendActionPoint()) return;
-                    
-                    const oldBurnOpt = gameState.burnRate;
-                    const oldMoraleOpt = gameState.morale;
+                    addLog('Marketing campaign launched', 'success');
+                    addLog('IMPACT: Better positioning for next contract bid', 'impact');
+                }
+            },
+            {
+                id: 'optimize',
+                title: '✂️ Cut Costs',
+                description: 'Reduce burn rate to extend runway (hurts morale)',
+                cost: 'No cost',
+                impact: '-15% burn, -15% morale',
+                apCost: 1,
+                canUse: function() { return gameState.burnRate > 200000; },
+                execute: function() {
                     gameState.burnRate = Math.max(200000, Math.floor(gameState.burnRate * 0.85));
                     gameState.morale = Math.max(0, gameState.morale - 15);
-                    
-                    trackChange('burn', oldBurnOpt / 1000, gameState.burnRate / 1000);
-                    trackChange('morale', oldMoraleOpt, gameState.morale);
-                    
-                    logMessage('> Optimized operations', 'player');
-                    showImpact('Costs reduced', 'Burn: -15%, Morale: -15%',
-                               'Team unhappy about cuts. May slow development or cause turnover.');
-                    break;
+                    addLog('Operations optimized: -15% burn', 'success');
+                    addLog('CONSEQUENCE: Team unhappy. May slow development.', 'warning');
+                }
             }
+        ];
+
+        function addLog(message, type) {
+            gameState.log.unshift({msg: message, type: type || 'system'});
+            if (gameState.log.length > 10) gameState.log.pop();
+        }
+
+        function checkMilestones(productKey) {
+            const product = gameState.products[productKey];
+            product.milestones.forEach(function(threshold) {
+                if (product.progress >= threshold && product.progress - 20 < threshold) {
+                    if (threshold === 60) {
+                        addLog('🎉 MILESTONE: ' + product.name + ' can now demo to DoD!', 'success');
+                    } else if (threshold === 80) {
+                        addLog('🎉 MILESTONE: ' + product.name + ' ready for contract bids!', 'success');
+                    } else if (threshold === 100) {
+                        product.deployed = true;
+                        gameState.revenue += product.revenue;
+                        gameState.valuation = Math.floor(gameState.valuation * 1.25);
+                        addLog('🚀 ' + product.name + ' DEPLOYED! +$' + (product.revenue/1000) + 'K/mo revenue', 'success');
+                    }
+                }
+            });
+        }
+
+        function renderActions() {
+            const container = document.getElementById('actionsContainer');
+            container.innerHTML = '';
             
-            updateDisplay();
+            actions.forEach(function(action) {
+                const canUse = action.canUse();
+                const disabled = !canUse || gameState.actionPoints < action.apCost;
+                
+                const card = document.createElement('div');
+                card.className = 'action-card' + (disabled ? ' disabled' : '');
+                
+                const costText = typeof action.cost === 'function' ? action.cost() : action.cost;
+                
+                card.innerHTML = '<div class="action-title">' + action.title + '</div>' +
+                    '<div class="action-description">' + action.description + '</div>' +
+                    '<div><span class="action-cost">' + costText + '</span>' +
+                    '<span class="action-impact">' + action.impact + '</span></div>';
+                
+                if (!disabled) {
+                    card.onclick = function() {
+                        if (gameState.actionPoints >= action.apCost) {
+                            gameState.actionPoints -= action.apCost;
+                            action.execute();
+                            render();
+                        }
+                    };
+                }
+                
+                container.appendChild(card);
+            });
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsDetails');
+            container.innerHTML = '';
+            
+            Object.keys(gameState.products).forEach(function(key) {
+                const p = gameState.products[key];
+                const div = document.createElement('div');
+                div.className = 'product-row';
+                
+                var milestoneText = '';
+                if (p.progress >= 60) milestoneText = '<span class="milestone-tag">Can demo</span>';
+                if (p.progress >= 80) milestoneText += '<span class="milestone-tag">Can bid contracts</span>';
+                if (p.deployed) milestoneText = '<span class="milestone-tag">✅ DEPLOYED</span>';
+                
+                div.innerHTML = '<div style="flex: 1;"><strong>' + p.name + '</strong> ' + milestoneText + 
+                    '<div class="progress-bar"><div class="progress-fill" style="width: ' + p.progress + '%"></div></div></div>' +
+                    '<div style="font-weight: 700; color: #60a5fa;">' + p.progress + '%</div>';
+                
+                container.appendChild(div);
+            });
+        }
+
+        function renderMetrics() {
+            const container = document.getElementById('metricsDetails');
+            container.innerHTML = '<div class="product-row"><span>Team Size</span><strong>' + gameState.employees + '</strong></div>' +
+                '<div class="product-row"><span>Morale</span><strong>' + Math.round(gameState.morale) + '%</strong></div>' +
+                '<div class="product-row"><span>Reputation</span><strong>' + Math.round(gameState.reputation) + '%</strong></div>' +
+                '<div class="product-row"><span>DoD Relations</span><strong>' + Math.round(gameState.dodRelations) + '%</strong></div>' +
+                '<div class="product-row"><span>Monthly Revenue</span><strong>$' + (gameState.revenue/1000).toFixed(0) + 'K</strong></div>' +
+                '<div class="product-row"><span>Monthly Burn</span><strong>$' + (gameState.burnRate/1000).toFixed(0) + 'K</strong></div>' +
+                '<div class="product-row"><span>Funding Stage</span><strong>' + gameState.fundingRound + '</strong></div>';
+        }
+
+        function renderLog() {
+            const container = document.getElementById('logDetails');
+            container.innerHTML = '';
+            
+            gameState.log.slice(0, 5).forEach(function(entry) {
+                const div = document.createElement('div');
+                div.className = 'log-message ' + entry.type;
+                div.textContent = entry.msg;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleDetails(section) {
+            const el = document.getElementById(section + 'Details');
+            el.classList.toggle('show');
+        }
+
+        function render() {
+            document.getElementById('cashDisplay').textContent = '$' + (gameState.cash / 1000000).toFixed(1) + 'M';
+            
+            const runway = Math.max(0, Math.floor(gameState.cash / gameState.burnRate));
+            const runwayEl = document.getElementById('runwayDisplay');
+            runwayEl.textContent = runway + ' months runway';
+            runwayEl.className = runway >= 6 ? 'runway-warning' : 'runway-warning runway-critical';
+            
+            document.getElementById('valuationDisplay').textContent = '$' + (gameState.valuation / 1000000).toFixed(0) + 'M';
+            const goalPercent = (gameState.valuation / 1000000000) * 100;
+            document.getElementById('goalBar').style.width = goalPercent + '%';
+            
+            document.getElementById('quarterDisplay').textContent = gameState.quarter;
+            document.getElementById('yearDisplay').textContent = gameState.year;
+            document.getElementById('apDisplay').textContent = gameState.actionPoints;
+            
+            renderActions();
+            renderProducts();
+            renderMetrics();
+            renderLog();
         }
 
         function advanceQuarter() {
-            logMessage('━━━ END Q' + gameState.quarter + ' ' + gameState.year + ' ━━━', 'system');
-            
-            gameState.lastChanges = {};
-            const oldCash = gameState.cash;
-            const oldMorale = gameState.morale;
-            const oldRunway = Math.floor(gameState.cash / gameState.burnRate);
+            addLog('━━━ END Q' + gameState.quarter + ' ━━━', 'system');
             
             gameState.cash += (gameState.revenue - gameState.burnRate);
-            
-            trackChange('cash', oldCash / 1000000, gameState.cash / 1000000);
-            const newRunway = Math.max(0, Math.floor(gameState.cash / gameState.burnRate));
-            trackChange('runway', oldRunway, newRunway);
-            
-            logMessage('💰 Revenue: +$' + (gameState.revenue/1000).toFixed(0) + 'K | Burn: -$' + (gameState.burnRate/1000).toFixed(0) + 'K | Net: ' + ((gameState.revenue - gameState.burnRate) >= 0 ? '+' : '') + '$' + ((gameState.revenue - gameState.burnRate)/1000).toFixed(0) + 'K', 'system');
+            addLog('Net cash flow: ' + ((gameState.revenue - gameState.burnRate) >= 0 ? '+' : '') + '$' + ((gameState.revenue - gameState.burnRate)/1000).toFixed(0) + 'K', 'system');
             
             const teamBoost = gameState.employees >= 15 ? 1.25 : 1.0;
             Object.keys(gameState.products).forEach(function(key) {
                 const p = gameState.products[key];
                 if (p.progress > 0 && p.progress < 100 && !p.deployed) {
-                    const oldProg = p.progress;
                     p.progress = Math.min(100, p.progress + (8 * teamBoost));
-                    
-                    if (p.progress >= 100 && !p.deployed) {
-                        p.deployed = true;
-                        const oldRev = gameState.revenue;
-                        gameState.revenue += p.revenue;
-                        gameState.reputation += 20;
-                        gameState.valuation = Math.floor(gameState.valuation * 1.25);
-                        trackChange('revenue', oldRev / 1000, gameState.revenue / 1000);
-                        logMessage('🚀 ' + p.name + ' DEPLOYED! Revenue +$' + (p.revenue/1000).toFixed(0) + 'K/mo, Valuation +25%', 'success');
-                    } else if (oldProg !== p.progress) {
-                        logMessage('📈 ' + p.name + ': ' + oldProg.toFixed(0) + '% → ' + p.progress.toFixed(0) + '%', 'system');
-                    }
+                    checkMilestones(key);
                 }
             });
             
             gameState.morale = Math.max(20, gameState.morale - (Math.random() * 5 + 2));
-            trackChange('morale', oldMorale, gameState.morale);
-            
-            gameState.competitorThreat += 5;
-            if (gameState.competitorThreat >= 70 && Math.random() > 0.5) {
-                logMessage('⚠️ Anduril announced major contract win. Market pressure increasing!', 'warning');
-                gameState.competitorThreat = 50;
-            }
-            
             gameState.actionPoints = gameState.maxActionPoints;
             
             if (gameState.quarter === 4) {
@@ -822,71 +644,29 @@
                 gameState.quarter++;
             }
             
-            logMessage('━━━ START Q' + gameState.quarter + ' ' + gameState.year + ' ━━━', 'system');
-            
-            updateDisplay();
             checkGameStatus();
+            render();
         }
 
         function checkGameStatus() {
             const runway = Math.floor(gameState.cash / gameState.burnRate);
             if (runway <= 0 && gameState.cash < 0) {
-                logMessage('💀 GAME OVER: Out of cash', 'error');
-                gameState.gameOver = true;
-                showEndGame();
-                return;
-            }
-            if (gameState.morale <= 15 && gameState.quarter > 4) {
-                logMessage('💀 GAME OVER: Team quit due to low morale', 'error');
-                gameState.gameOver = true;
-                showEndGame();
-                return;
+                addLog('💀 GAME OVER: Out of cash', 'error');
+                alert('Game Over! You ran out of money. Final valuation: $' + (gameState.valuation/1000000).toFixed(1) + 'M');
+                location.reload();
             }
             if (gameState.valuation >= 1000000000) {
-                logMessage('🎉 VICTORY! Unicorn status achieved!', 'success');
-                gameState.gameOver = true;
-                showEndGame();
-                return;
+                addLog('🎉 VICTORY! Unicorn achieved!', 'success');
+                alert('You won! Reached $' + (gameState.valuation/1000000).toFixed(0) + 'M valuation!');
+                location.reload();
             }
-        }
-
-        function showEndGame() {
-            logMessage('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-            logMessage('FINAL SCORE', 'system');
-            logMessage('Quarters Survived: ' + ((gameState.quarter - 1) + (gameState.year - 2025) * 4), 'system');
-            logMessage('Final Valuation: $' + (gameState.valuation/1000000).toFixed(1) + 'M', 'system');
-            logMessage('Contracts Won: ' + gameState.contracts.length, 'system');
-            logMessage('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-            logMessage('Refresh page to play again', 'system');
-        }
-
-        function showReport() {
-            logMessage('━━━━━━━━━ DETAILED REPORT ━━━━━━━━━', 'system');
-            logMessage('Q' + gameState.quarter + ' ' + gameState.year + ' | Stage: ' + gameState.fundingRound, 'system');
-            logMessage('Cash: $' + (gameState.cash/1000000).toFixed(2) + 'M | Runway: ' + Math.floor(gameState.cash/gameState.burnRate) + ' months', 'system');
-            logMessage('Valuation: $' + (gameState.valuation/1000000).toFixed(1) + 'M (Goal: $1,000M)', 'system');
-            logMessage('Team: ' + gameState.employees + ' | Morale: ' + Math.round(gameState.morale) + '%', 'system');
-            logMessage('Revenue: $' + (gameState.revenue/1000).toFixed(0) + 'K/mo | Burn: $' + (gameState.burnRate/1000).toFixed(0) + 'K/mo', 'system');
-            logMessage('Contracts: ' + gameState.contracts.length + ' active', 'system');
-            
-            Object.keys(gameState.products).forEach(function(key) {
-                const p = gameState.products[key];
-                logMessage(p.name + ': ' + p.progress.toFixed(0) + '% ' + (p.deployed ? '(DEPLOYED ✅)' : ''), 'system');
-            });
-            
-            logMessage('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            logMessage('🚀 Welcome to Vanguard Defense Technologies', 'system');
-            logMessage('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-            logMessage('🎯 GOAL: Reach $1B valuation (unicorn status)', 'system');
-            logMessage('⚡ You have 3 ACTION POINTS per quarter - use them wisely!', 'system');
-            logMessage('💡 Starting with only $2M cash - every decision matters', 'system');
-            logMessage('📊 Watch for IMPACT messages showing consequences', 'system');
-            logMessage('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-            logMessage('💭 STRATEGIC TIP: Focus on ONE product first. Spread too thin = failure.', 'warning');
-            updateDisplay();
+            addLog('Welcome to Vanguard Defense Technologies', 'system');
+            addLog('Goal: Reach $1B valuation. You have 3 actions per quarter.', 'system');
+            addLog('Starting with only $2M - every decision matters!', 'warning');
+            render();
         });
     </script>
 </body>
