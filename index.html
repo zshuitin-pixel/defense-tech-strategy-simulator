@@ -1,644 +1,634 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, DollarSign, Users, Award, AlertTriangle, Target } from 'lucide-react';
-
-const DefenseStrategySim = () => {
-  const [gameState, setGameState] = useState({
-    companyName: '',
-    quarter: 1,
-    maxQuarters: 12,
-    valuation: 50, // millions
-    targetValuation: 500, // millions
-    cash: 25, // millions
-    reputation: 70, // 0-100
-    talent: 60, // 0-100
-    govRelations: 50, // 0-100
-    contracts: 2,
-    innovation: 50, // 0-100
-    gameStarted: false,
-    gameOver: false,
-    victory: false,
-    currentScenario: null,
-    eventLog: []
-  });
-
-  const scenarios = [
-    {
-      id: 1,
-      title: "Major DoD RFP Opportunity",
-      description: "The Department of Defense has issued an RFP for a $100M contract in autonomous systems. Competing requires significant upfront investment in proposal development and prototype demonstration.",
-      icon: "📋",
-      options: [
-        {
-          text: "Go All-In: Commit $15M and top talent",
-          effects: { cash: -15, talent: -10, contracts: 1, valuation: 40, reputation: 15, govRelations: 20 },
-          outcome: "You assemble a world-class team and deliver an impressive proposal. The contract is yours!"
-        },
-        {
-          text: "Conservative Bid: Minimal investment approach",
-          effects: { cash: -5, contracts: 0, valuation: 5, reputation: -5 },
-          outcome: "You submit a solid but unremarkable proposal. The contract goes to a competitor."
-        },
-        {
-          text: "Pass: Focus on existing contracts",
-          effects: { cash: 5, reputation: -10, govRelations: -15 },
-          outcome: "You preserve resources but miss a major growth opportunity. Some see this as playing it too safe."
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defense Strategy Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-      ]
-    },
-    {
-      id: 2,
-      title: "Talent War: Key Engineer Poaching",
-      description: "A Big Tech company is aggressively recruiting your lead AI engineer with a 2x salary offer. She's critical to your flagship program.",
-      icon: "🎯",
-      options: [
-        {
-          text: "Counter-Offer: Match salary + equity",
-          effects: { cash: -8, talent: 10, innovation: 15, valuation: 20 },
-          outcome: "She stays and appreciates the recognition. Team morale improves significantly."
-        },
-        {
-          text: "Let Her Go: Promote from within",
-          effects: { cash: 2, talent: -20, innovation: -15, valuation: -15, reputation: -5 },
-          outcome: "The internal promotion struggles initially. You've lost institutional knowledge but saved cash."
-        },
-        {
-          text: "Negotiate: Flexible work + research time",
-          effects: { cash: -3, talent: 5, innovation: 10, reputation: 5 },
-          outcome: "A creative compromise keeps her engaged while managing costs."
+        .gradient-bg {
+            background: linear-gradient(to bottom right, #0f172a, #1e3a8a, #0f172a);
         }
-      ]
-    },
-    {
-      id: 3,
-      title: "Supply Chain Crisis",
-      description: "A key semiconductor supplier faces sanctions. Your production timeline for a $50M contract is at risk.",
-      icon: "⚠️",
-      options: [
-        {
-          text: "Emergency Redesign: Switch to domestic chips",
-          effects: { cash: -12, innovation: -10, contracts: 0, reputation: 10, govRelations: 15 },
-          outcome: "Costly but demonstrates resilience and commitment to national security priorities."
-        },
-        {
-          text: "Delay & Negotiate: Request timeline extension",
-          effects: { cash: -3, reputation: -15, govRelations: -10, contracts: 0 },
-          outcome: "The delay frustrates your client but preserves your technical approach."
-        },
-        {
-          text: "Stockpile: Buy 2 years of inventory now",
-          effects: { cash: -20, innovation: 0, reputation: 5 },
-          outcome: "Massive cash outlay but you're protected against future disruptions."
+        .glass {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
         }
-      ]
-    },
-    {
-      id: 4,
-      title: "Acquisition Target",
-      description: "A smaller defense tech startup with promising drone technology is looking for a buyer. They're asking $30M but are open to stock deals.",
-      icon: "🤝",
-      options: [
-        {
-          text: "Cash Acquisition: Buy outright",
-          effects: { cash: -30, talent: 15, innovation: 25, valuation: 60, contracts: 1 },
-          outcome: "You gain cutting-edge technology and a talented team. Integration goes smoothly."
-        },
-        {
-          text: "Stock Deal: Preserve cash",
-          effects: { cash: -5, talent: 15, innovation: 25, valuation: 40, contracts: 1 },
-          outcome: "The acquisition is successful and you've preserved precious cash for operations."
-        },
-        {
-          text: "Pass: Organic growth only",
-          effects: { cash: 5, innovation: 5, valuation: 10 },
-          outcome: "You continue your current trajectory. The startup gets acquired by a competitor."
+        .progress-bar {
+            background: linear-gradient(to right, #3b82f6, #06b6d4);
+            transition: width 0.5s ease;
         }
-      ]
-    },
-    {
-      id: 5,
-      title: "Congressional Hearing",
-      description: "Your company is called to testify about cost overruns on a troubled program. Media attention is intense.",
-      icon: "🏛️",
-      options: [
-        {
-          text: "Full Transparency: Admit mistakes, present fix",
-          effects: { cash: -5, reputation: 10, govRelations: 15, contracts: 0 },
-          outcome: "Your honesty is refreshing. You take a short-term hit but earn long-term trust."
-        },
-        {
-          text: "Deflect: Blame requirements changes",
-          effects: { cash: 0, reputation: -20, govRelations: -25, contracts: -1 },
-          outcome: "The committee sees through it. Your credibility takes a major hit."
-        },
-        {
-          text: "Technical Defense: Deep-dive presentation",
-          effects: { cash: -3, reputation: 5, govRelations: 5, talent: -5 },
-          outcome: "You avoid blame but the lengthy technical details bore the committee."
-        }
-      ]
-    },
-    {
-      id: 6,
-      title: "R&D Breakthrough",
-      description: "Your lab has achieved a breakthrough in quantum sensing. This could revolutionize defense tech, but productization requires $25M investment.",
-      icon: "🔬",
-      options: [
-        {
-          text: "Full Investment: Rush to production",
-          effects: { cash: -25, innovation: 40, valuation: 80, reputation: 20 },
-          outcome: "You beat competitors to market. This becomes your flagship product line."
-        },
-        {
-          text: "Modest Investment: Pilot program only",
-          effects: { cash: -10, innovation: 15, valuation: 25 },
-          outcome: "You demonstrate the technology but lack the scale for major impact."
-        },
-        {
-          text: "License Technology: Let others productize",
-          effects: { cash: 15, innovation: -10, valuation: 10, reputation: -10 },
-          outcome: "Quick revenue but you've given away your competitive advantage."
-        }
-      ]
-    },
-    {
-      id: 7,
-      title: "Cybersecurity Breach",
-      description: "A sophisticated attack has compromised some development systems. No classified data was exposed, but clients are concerned.",
-      icon: "🔒",
-      options: [
-        {
-          text: "Immediate Disclosure: Notify all stakeholders",
-          effects: { cash: -8, reputation: 5, govRelations: 10, contracts: 0 },
-          outcome: "Your transparency is appreciated. You implement industry-leading security measures."
-        },
-        {
-          text: "Quiet Fix: Handle internally",
-          effects: { cash: -3, reputation: -25, govRelations: -30, contracts: -1 },
-          outcome: "The breach leaks anyway. The cover-up is worse than the crime."
-        },
-        {
-          text: "Major Security Overhaul: $15M investment",
-          effects: { cash: -15, reputation: 15, govRelations: 20, innovation: 5 },
-          outcome: "You become the gold standard for defense contractor security."
-        }
-      ]
-    },
-    {
-      id: 8,
-      title: "International Expansion",
-      description: "Allied nations are interested in your technology. Exporting requires State Department approval and additional compliance costs.",
-      icon: "🌍",
-      options: [
-        {
-          text: "Pursue Aggressively: Multi-nation strategy",
-          effects: { cash: -10, reputation: 20, valuation: 50, contracts: 2, govRelations: -5 },
-          outcome: "You secure contracts with UK, Australia, and Japan. Revenue diversification achieved."
-        },
-        {
-          text: "US-Only: Stay domestic",
-          effects: { cash: 5, govRelations: 10, valuation: 10 },
-          outcome: "You maintain simplicity but limit your total addressable market."
-        },
-        {
-          text: "Strategic Partnership: Joint venture approach",
-          effects: { cash: -5, reputation: 10, valuation: 25, contracts: 1 },
-          outcome: "You share risk and reward with international partners."
-        }
-      ]
-    },
-    {
-      id: 9,
-      title: "Ethical Dilemma: Autonomous Weapons",
-      description: "A lucrative contract requires developing fully autonomous lethal systems. Your technical team is divided on the ethics.",
-      icon: "⚖️",
-      options: [
-        {
-          text: "Accept Contract: Business is business",
-          effects: { cash: 20, talent: -25, reputation: -15, contracts: 1, valuation: 40 },
-          outcome: "Revenue increases but several key engineers resign. Public advocacy groups criticize you."
-        },
-        {
-          text: "Decline: Establish ethical guidelines",
-          effects: { cash: -5, talent: 15, reputation: 20, govRelations: -10, valuation: 15 },
-          outcome: "You become known for principled leadership. Talent acquisition improves dramatically."
-        },
-        {
-          text: "Compromise: Human-in-the-loop system",
-          effects: { cash: 10, talent: 5, reputation: 5, contracts: 1, valuation: 25 },
-          outcome: "You find middle ground that satisfies most stakeholders."
-        }
-      ]
-    },
-    {
-      id: 10,
-      title: "IPO Opportunity",
-      description: "Investment bankers suggest your company is ready to go public. An IPO could raise $100M but comes with scrutiny and pressure.",
-      icon: "📈",
-      options: [
-        {
-          text: "Go Public: Launch IPO",
-          effects: { cash: 100, valuation: 150, reputation: 25, govRelations: 5, talent: -10 },
-          outcome: "Successful IPO! You gain capital but now answer to public shareholders."
-        },
-        {
-          text: "Private Equity: Raise privately",
-          effects: { cash: 60, valuation: 80, talent: 5 },
-          outcome: "You maintain more control while securing significant growth capital."
-        },
-        {
-          text: "Stay Independent: Bootstrap growth",
-          effects: { cash: 10, valuation: 20, talent: 10, reputation: 5 },
-          outcome: "You maintain full control but grow more slowly."
-        }
-      ]
-    }
-  ];
+    </style>
+</head>
+<body>
+    <div id="app"></div>
 
-  useEffect(() => {
-    if (gameState.gameStarted && !gameState.currentScenario && !gameState.gameOver) {
-      presentNewScenario();
-    }
-  }, [gameState.quarter, gameState.gameStarted]);
+    <script>
+        const gameState = {
+            companyName: '',
+            quarter: 1,
+            maxQuarters: 12,
+            valuation: 50,
+            targetValuation: 500,
+            cash: 25,
+            reputation: 70,
+            talent: 60,
+            govRelations: 50,
+            contracts: 2,
+            innovation: 50,
+            gameStarted: false,
+            gameOver: false,
+            victory: false,
+            currentScenario: null,
+            eventLog: []
+        };
 
-  const startGame = (name) => {
-    setGameState(prev => ({
-      ...prev,
-      companyName: name,
-      gameStarted: true,
-      eventLog: [`${name} founded. Target: $${prev.targetValuation}M valuation in ${prev.maxQuarters} quarters.`]
-    }));
-  };
+        const scenarios = [
+            {
+                id: 1,
+                title: "Major DoD RFP Opportunity",
+                description: "The Department of Defense has issued an RFP for a $100M contract in autonomous systems. Competing requires significant upfront investment in proposal development and prototype demonstration.",
+                icon: "📋",
+                options: [
+                    {
+                        text: "Go All-In: Commit $15M and top talent",
+                        effects: { cash: -15, talent: -10, contracts: 1, valuation: 40, reputation: 15, govRelations: 20 },
+                        outcome: "You assemble a world-class team and deliver an impressive proposal. The contract is yours!"
+                    },
+                    {
+                        text: "Conservative Bid: Minimal investment approach",
+                        effects: { cash: -5, contracts: 0, valuation: 5, reputation: -5 },
+                        outcome: "You submit a solid but unremarkable proposal. The contract goes to a competitor."
+                    },
+                    {
+                        text: "Pass: Focus on existing contracts",
+                        effects: { cash: 5, reputation: -10, govRelations: -15 },
+                        outcome: "You preserve resources but miss a major growth opportunity. Some see this as playing it too safe."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Talent War: Key Engineer Poaching",
+                description: "A Big Tech company is aggressively recruiting your lead AI engineer with a 2x salary offer. She's critical to your flagship program.",
+                icon: "🎯",
+                options: [
+                    {
+                        text: "Counter-Offer: Match salary + equity",
+                        effects: { cash: -8, talent: 10, innovation: 15, valuation: 20 },
+                        outcome: "She stays and appreciates the recognition. Team morale improves significantly."
+                    },
+                    {
+                        text: "Let Her Go: Promote from within",
+                        effects: { cash: 2, talent: -20, innovation: -15, valuation: -15, reputation: -5 },
+                        outcome: "The internal promotion struggles initially. You've lost institutional knowledge but saved cash."
+                    },
+                    {
+                        text: "Negotiate: Flexible work + research time",
+                        effects: { cash: -3, talent: 5, innovation: 10, reputation: 5 },
+                        outcome: "A creative compromise keeps her engaged while managing costs."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Supply Chain Crisis",
+                description: "A key semiconductor supplier faces sanctions. Your production timeline for a $50M contract is at risk.",
+                icon: "⚠️",
+                options: [
+                    {
+                        text: "Emergency Redesign: Switch to domestic chips",
+                        effects: { cash: -12, innovation: -10, contracts: 0, reputation: 10, govRelations: 15 },
+                        outcome: "Costly but demonstrates resilience and commitment to national security priorities."
+                    },
+                    {
+                        text: "Delay & Negotiate: Request timeline extension",
+                        effects: { cash: -3, reputation: -15, govRelations: -10, contracts: 0 },
+                        outcome: "The delay frustrates your client but preserves your technical approach."
+                    },
+                    {
+                        text: "Stockpile: Buy 2 years of inventory now",
+                        effects: { cash: -20, innovation: 0, reputation: 5 },
+                        outcome: "Massive cash outlay but you're protected against future disruptions."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Acquisition Target",
+                description: "A smaller defense tech startup with promising drone technology is looking for a buyer. They're asking $30M but are open to stock deals.",
+                icon: "🤝",
+                options: [
+                    {
+                        text: "Cash Acquisition: Buy outright",
+                        effects: { cash: -30, talent: 15, innovation: 25, valuation: 60, contracts: 1 },
+                        outcome: "You gain cutting-edge technology and a talented team. Integration goes smoothly."
+                    },
+                    {
+                        text: "Stock Deal: Preserve cash",
+                        effects: { cash: -5, talent: 15, innovation: 25, valuation: 40, contracts: 1 },
+                        outcome: "The acquisition is successful and you've preserved precious cash for operations."
+                    },
+                    {
+                        text: "Pass: Organic growth only",
+                        effects: { cash: 5, innovation: 5, valuation: 10 },
+                        outcome: "You continue your current trajectory. The startup gets acquired by a competitor."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Congressional Hearing",
+                description: "Your company is called to testify about cost overruns on a troubled program. Media attention is intense.",
+                icon: "🏛️",
+                options: [
+                    {
+                        text: "Full Transparency: Admit mistakes, present fix",
+                        effects: { cash: -5, reputation: 10, govRelations: 15, contracts: 0 },
+                        outcome: "Your honesty is refreshing. You take a short-term hit but earn long-term trust."
+                    },
+                    {
+                        text: "Deflect: Blame requirements changes",
+                        effects: { cash: 0, reputation: -20, govRelations: -25, contracts: -1 },
+                        outcome: "The committee sees through it. Your credibility takes a major hit."
+                    },
+                    {
+                        text: "Technical Defense: Deep-dive presentation",
+                        effects: { cash: -3, reputation: 5, govRelations: 5, talent: -5 },
+                        outcome: "You avoid blame but the lengthy technical details bore the committee."
+                    }
+                ]
+            },
+            {
+                id: 6,
+                title: "R&D Breakthrough",
+                description: "Your lab has achieved a breakthrough in quantum sensing. This could revolutionize defense tech, but productization requires $25M investment.",
+                icon: "🔬",
+                options: [
+                    {
+                        text: "Full Investment: Rush to production",
+                        effects: { cash: -25, innovation: 40, valuation: 80, reputation: 20 },
+                        outcome: "You beat competitors to market. This becomes your flagship product line."
+                    },
+                    {
+                        text: "Modest Investment: Pilot program only",
+                        effects: { cash: -10, innovation: 15, valuation: 25 },
+                        outcome: "You demonstrate the technology but lack the scale for major impact."
+                    },
+                    {
+                        text: "License Technology: Let others productize",
+                        effects: { cash: 15, innovation: -10, valuation: 10, reputation: -10 },
+                        outcome: "Quick revenue but you've given away your competitive advantage."
+                    }
+                ]
+            },
+            {
+                id: 7,
+                title: "Cybersecurity Breach",
+                description: "A sophisticated attack has compromised some development systems. No classified data was exposed, but clients are concerned.",
+                icon: "🔒",
+                options: [
+                    {
+                        text: "Immediate Disclosure: Notify all stakeholders",
+                        effects: { cash: -8, reputation: 5, govRelations: 10, contracts: 0 },
+                        outcome: "Your transparency is appreciated. You implement industry-leading security measures."
+                    },
+                    {
+                        text: "Quiet Fix: Handle internally",
+                        effects: { cash: -3, reputation: -25, govRelations: -30, contracts: -1 },
+                        outcome: "The breach leaks anyway. The cover-up is worse than the crime."
+                    },
+                    {
+                        text: "Major Security Overhaul: $15M investment",
+                        effects: { cash: -15, reputation: 15, govRelations: 20, innovation: 5 },
+                        outcome: "You become the gold standard for defense contractor security."
+                    }
+                ]
+            },
+            {
+                id: 8,
+                title: "International Expansion",
+                description: "Allied nations are interested in your technology. Exporting requires State Department approval and additional compliance costs.",
+                icon: "🌍",
+                options: [
+                    {
+                        text: "Pursue Aggressively: Multi-nation strategy",
+                        effects: { cash: -10, reputation: 20, valuation: 50, contracts: 2, govRelations: -5 },
+                        outcome: "You secure contracts with UK, Australia, and Japan. Revenue diversification achieved."
+                    },
+                    {
+                        text: "US-Only: Stay domestic",
+                        effects: { cash: 5, govRelations: 10, valuation: 10 },
+                        outcome: "You maintain simplicity but limit your total addressable market."
+                    },
+                    {
+                        text: "Strategic Partnership: Joint venture approach",
+                        effects: { cash: -5, reputation: 10, valuation: 25, contracts: 1 },
+                        outcome: "You share risk and reward with international partners."
+                    }
+                ]
+            },
+            {
+                id: 9,
+                title: "Ethical Dilemma: Autonomous Weapons",
+                description: "A lucrative contract requires developing fully autonomous lethal systems. Your technical team is divided on the ethics.",
+                icon: "⚖️",
+                options: [
+                    {
+                        text: "Accept Contract: Business is business",
+                        effects: { cash: 20, talent: -25, reputation: -15, contracts: 1, valuation: 40 },
+                        outcome: "Revenue increases but several key engineers resign. Public advocacy groups criticize you."
+                    },
+                    {
+                        text: "Decline: Establish ethical guidelines",
+                        effects: { cash: -5, talent: 15, reputation: 20, govRelations: -10, valuation: 15 },
+                        outcome: "You become known for principled leadership. Talent acquisition improves dramatically."
+                    },
+                    {
+                        text: "Compromise: Human-in-the-loop system",
+                        effects: { cash: 10, talent: 5, reputation: 5, contracts: 1, valuation: 25 },
+                        outcome: "You find middle ground that satisfies most stakeholders."
+                    }
+                ]
+            },
+            {
+                id: 10,
+                title: "IPO Opportunity",
+                description: "Investment bankers suggest your company is ready to go public. An IPO could raise $100M but comes with scrutiny and pressure.",
+                icon: "📈",
+                options: [
+                    {
+                        text: "Go Public: Launch IPO",
+                        effects: { cash: 100, valuation: 150, reputation: 25, govRelations: 5, talent: -10 },
+                        outcome: "Successful IPO! You gain capital but now answer to public shareholders."
+                    },
+                    {
+                        text: "Private Equity: Raise privately",
+                        effects: { cash: 60, valuation: 80, talent: 5 },
+                        outcome: "You maintain more control while securing significant growth capital."
+                    },
+                    {
+                        text: "Stay Independent: Bootstrap growth",
+                        effects: { cash: 10, valuation: 20, talent: 10, reputation: 5 },
+                        outcome: "You maintain full control but grow more slowly."
+                    }
+                ]
+            }
+        ];
 
-  const presentNewScenario = () => {
-    const availableScenarios = scenarios.filter(s => 
-      !gameState.eventLog.some(log => log.includes(s.title))
-    );
-    
-    if (availableScenarios.length > 0) {
-      const scenario = availableScenarios[Math.floor(Math.random() * availableScenarios.length)];
-      setGameState(prev => ({ ...prev, currentScenario: scenario }));
-    } else {
-      // Reshuffle if we've used all scenarios
-      const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-      setGameState(prev => ({ ...prev, currentScenario: scenario }));
-    }
-  };
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (!gameState.gameStarted) {
+                app.innerHTML = `
+                    <div class="min-h-screen gradient-bg p-8 flex items-center justify-center">
+                        <div class="max-w-2xl w-full glass border border-blue-500/30 rounded-lg p-8 shadow-2xl">
+                            <div class="text-center mb-8">
+                                <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+                                    DEFENSE STRATEGY SIMULATOR
+                                </h1>
+                                <p class="text-slate-300 text-lg">Lead your defense technology startup to unicorn status</p>
+                            </div>
+                            
+                            <div class="bg-slate-900/50 rounded-lg p-6 mb-6 border border-blue-500/20">
+                                <h2 class="text-xl font-semibold text-blue-300 mb-4">MISSION BRIEF</h2>
+                                <div class="space-y-3 text-slate-300">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-cyan-400 text-xl">🎯</span>
+                                        <div>
+                                            <span class="font-semibold text-cyan-400">Objective:</span> Reach $${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-green-400 text-xl">💰</span>
+                                        <div>
+                                            <span class="font-semibold text-green-400">Starting Capital:</span> $${gameState.cash}M
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-yellow-400 text-xl">⚠️</span>
+                                        <div>
+                                            <span class="font-semibold text-yellow-400">Challenge:</span> Navigate complex strategic decisions balancing growth, reputation, and resources
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-  const makeDecision = (option) => {
-    const newState = { ...gameState };
-    const effects = option.effects;
+                            <input
+                                type="text"
+                                id="companyNameInput"
+                                placeholder="Enter your company name..."
+                                class="w-full bg-slate-900/50 border border-blue-500/30 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 transition-colors mb-4"
+                            />
+                            
+                            <button
+                                onclick="startGame()"
+                                class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50"
+                            >
+                                LAUNCH COMPANY
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('companyNameInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                        startGame();
+                    }
+                });
+                return;
+            }
 
-    // Apply effects
-    newState.valuation = Math.max(0, newState.valuation + (effects.valuation || 0));
-    newState.cash = Math.max(0, newState.cash + (effects.cash || 0));
-    newState.reputation = Math.max(0, Math.min(100, newState.reputation + (effects.reputation || 0)));
-    newState.talent = Math.max(0, Math.min(100, newState.talent + (effects.talent || 0)));
-    newState.govRelations = Math.max(0, Math.min(100, newState.govRelations + (effects.govRelations || 0)));
-    newState.contracts = Math.max(0, newState.contracts + (effects.contracts || 0));
-    newState.innovation = Math.max(0, Math.min(100, newState.innovation + (effects.innovation || 0)));
+            if (gameState.gameOver) {
+                app.innerHTML = `
+                    <div class="min-h-screen gradient-bg p-8 flex items-center justify-center">
+                        <div class="max-w-3xl w-full glass border border-blue-500/30 rounded-lg p-8 shadow-2xl">
+                            <div class="text-center mb-8">
+                                <h1 class="text-5xl font-bold mb-4">
+                                    ${gameState.victory ? 
+                                        '<span class="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">🎉 MISSION SUCCESS 🎉</span>' :
+                                        '<span class="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">MISSION FAILED</span>'
+                                    }
+                                </h1>
+                                <p class="text-slate-300 text-xl">${gameState.companyName}</p>
+                            </div>
 
-    // Add quarterly revenue from contracts
-    const quarterlyRevenue = newState.contracts * 3;
-    newState.cash += quarterlyRevenue;
+                            <div class="grid grid-cols-2 gap-4 mb-8">
+                                <div class="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
+                                    <div class="text-slate-400 text-sm mb-1">Final Valuation</div>
+                                    <div class="text-3xl font-bold text-cyan-400">$${gameState.valuation}M</div>
+                                </div>
+                                <div class="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
+                                    <div class="text-slate-400 text-sm mb-1">Target</div>
+                                    <div class="text-3xl font-bold text-blue-400">$${gameState.targetValuation}M</div>
+                                </div>
+                                <div class="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
+                                    <div class="text-slate-400 text-sm mb-1">Cash Remaining</div>
+                                    <div class="text-2xl font-bold text-green-400">$${gameState.cash}M</div>
+                                </div>
+                                <div class="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
+                                    <div class="text-slate-400 text-sm mb-1">Quarters Elapsed</div>
+                                    <div class="text-2xl font-bold text-purple-400">${gameState.quarter - 1}</div>
+                                </div>
+                            </div>
 
-    // Natural valuation growth based on performance
-    const performanceMultiplier = (newState.reputation + newState.talent + newState.govRelations + newState.innovation) / 400;
-    newState.valuation += Math.floor(newState.valuation * 0.05 * performanceMultiplier);
+                            <div class="bg-slate-900/50 rounded-lg p-6 mb-6 border border-blue-500/20 max-h-64 overflow-y-auto">
+                                <h2 class="text-xl font-semibold text-blue-300 mb-4">COMPANY HISTORY</h2>
+                                <div class="space-y-2">
+                                    ${gameState.eventLog.map(log => `<div class="text-slate-300 text-sm">${log}</div>`).join('')}
+                                </div>
+                            </div>
 
-    // Log the event
-    newState.eventLog.push(`Q${newState.quarter}: ${newState.currentScenario.title} - ${option.text}`);
-    newState.eventLog.push(`→ ${option.outcome}`);
+                            <button
+                                onclick="resetGame()"
+                                class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50"
+                            >
+                                START NEW COMPANY
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
 
-    // Advance quarter
-    newState.quarter += 1;
-    newState.currentScenario = null;
+            // Main game screen
+            const progressPercent = Math.min(100, (gameState.valuation / gameState.targetValuation) * 100);
+            
+            app.innerHTML = `
+                <div class="min-h-screen gradient-bg p-6">
+                    <div class="max-w-7xl mx-auto">
+                        <!-- Header -->
+                        <div class="glass border border-blue-500/30 rounded-lg p-6 mb-6 shadow-xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                                        ${gameState.companyName}
+                                    </h1>
+                                    <p class="text-slate-400">Quarter ${gameState.quarter} of ${gameState.maxQuarters}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-slate-400">Target Valuation</div>
+                                    <div class="text-2xl font-bold text-cyan-400">$${gameState.targetValuation}M</div>
+                                </div>
+                            </div>
 
-    // Check win/loss conditions
-    if (newState.valuation >= newState.targetValuation) {
-      newState.gameOver = true;
-      newState.victory = true;
-      newState.eventLog.push(`🎉 VICTORY! You've reached $${newState.valuation}M valuation!`);
-    } else if (newState.quarter > newState.maxQuarters) {
-      newState.gameOver = true;
-      newState.victory = false;
-      newState.eventLog.push(`⏰ Time's up! Final valuation: $${newState.valuation}M (Target: $${newState.targetValuation}M)`);
-    } else if (newState.cash <= 0) {
-      newState.gameOver = true;
-      newState.victory = false;
-      newState.eventLog.push(`💸 Bankruptcy! You've run out of cash.`);
-    }
+                            <div class="relative w-full h-3 bg-slate-900/50 rounded-full overflow-hidden border border-blue-500/20">
+                                <div class="progress-bar absolute h-full" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-sm text-slate-400">
+                                <span>$${gameState.valuation}M</span>
+                                <span>${Math.floor(progressPercent)}% to goal</span>
+                            </div>
+                        </div>
 
-    setGameState(newState);
-  };
+                        <!-- KPI Dashboard -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                            <div class="glass border border-green-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-green-400 text-xl">💰</span>
+                                    <span class="text-slate-400 text-sm">Cash</span>
+                                </div>
+                                <div class="text-2xl font-bold text-green-400">$${gameState.cash}M</div>
+                            </div>
 
-  const resetGame = () => {
-    setGameState({
-      companyName: '',
-      quarter: 1,
-      maxQuarters: 12,
-      valuation: 50,
-      targetValuation: 500,
-      cash: 25,
-      reputation: 70,
-      talent: 60,
-      govRelations: 50,
-      contracts: 2,
-      innovation: 50,
-      gameStarted: false,
-      gameOver: false,
-      victory: false,
-      currentScenario: null,
-      eventLog: []
-    });
-  };
+                            <div class="glass border border-blue-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-blue-400 text-xl">📈</span>
+                                    <span class="text-slate-400 text-sm">Valuation</span>
+                                </div>
+                                <div class="text-2xl font-bold text-blue-400">$${gameState.valuation}M</div>
+                            </div>
 
-  if (!gameState.gameStarted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-8 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-slate-800/50 backdrop-blur-sm border border-blue-500/30 rounded-lg p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-4">
-              DEFENSE STRATEGY SIMULATOR
-            </h1>
-            <p className="text-slate-300 text-lg">Lead your defense technology startup to unicorn status</p>
-          </div>
-          
-          <div className="bg-slate-900/50 rounded-lg p-6 mb-6 border border-blue-500/20">
-            <h2 className="text-xl font-semibold text-blue-300 mb-4">MISSION BRIEF</h2>
-            <div className="space-y-3 text-slate-300">
-              <div className="flex items-start gap-3">
-                <Target className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <span className="font-semibold text-cyan-400">Objective:</span> Reach ${gameState.targetValuation}M valuation in {gameState.maxQuarters} quarters
+                            <div class="glass border border-purple-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-purple-400 text-xl">👥</span>
+                                    <span class="text-slate-400 text-sm">Talent</span>
+                                </div>
+                                <div class="text-2xl font-bold text-purple-400">${gameState.talent}</div>
+                                <div class="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: ${gameState.talent}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass border border-cyan-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-cyan-400 text-xl">🏆</span>
+                                    <span class="text-slate-400 text-sm">Reputation</span>
+                                </div>
+                                <div class="text-2xl font-bold text-cyan-400">${gameState.reputation}</div>
+                                <div class="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
+                                    <div class="h-full bg-cyan-500 rounded-full" style="width: ${gameState.reputation}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass border border-yellow-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🏛️</span>
+                                    <span class="text-slate-400 text-sm">Gov Relations</span>
+                                </div>
+                                <div class="text-2xl font-bold text-yellow-400">${gameState.govRelations}</div>
+                                <div class="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
+                                    <div class="h-full bg-yellow-500 rounded-full" style="width: ${gameState.govRelations}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="glass border border-pink-500/30 rounded-lg p-4 shadow-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🔬</span>
+                                    <span class="text-slate-400 text-sm">Innovation</span>
+                                </div>
+                                <div class="text-2xl font-bold text-pink-400">${gameState.innovation}</div>
+                                <div class="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
+                                    <div class="h-full bg-pink-500 rounded-full" style="width: ${gameState.innovation}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Contracts -->
+                        <div class="glass border border-blue-500/30 rounded-lg p-4 mb-6 shadow-lg">
+                            <div class="text-sm text-slate-400">Active Contracts: <span class="text-cyan-400 font-bold">${gameState.contracts}</span> ($${gameState.contracts * 3}M revenue per quarter)</div>
+                        </div>
+
+                        <!-- Scenario Card -->
+                        ${gameState.currentScenario ? `
+                            <div class="glass border border-blue-500/40 rounded-lg p-8 shadow-2xl">
+                                <div class="text-center mb-6">
+                                    <div class="text-6xl mb-4">${gameState.currentScenario.icon}</div>
+                                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
+                                        ${gameState.currentScenario.title}
+                                    </h2>
+                                    <p class="text-slate-300 text-lg max-w-2xl mx-auto">
+                                        ${gameState.currentScenario.description}
+                                    </p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    ${gameState.currentScenario.options.map((option, index) => `
+                                        <button
+                                            onclick="makeDecision(${index})"
+                                            class="w-full bg-slate-900/50 hover:bg-slate-800/70 border border-blue-500/30 hover:border-cyan-400/60 rounded-lg p-6 text-left transition-all shadow-lg hover:shadow-cyan-500/30 group"
+                                        >
+                                            <div class="text-lg font-semibold text-blue-300 group-hover:text-cyan-300 mb-2 transition-colors">
+                                                ${option.text}
+                                            </div>
+                                            <div class="text-slate-400 text-sm flex flex-wrap gap-3">
+                                                ${option.effects.cash ? `<span class="${option.effects.cash > 0 ? 'text-green-400' : 'text-red-400'}">Cash: ${option.effects.cash > 0 ? '+' : ''}${option.effects.cash}M</span>` : ''}
+                                                ${option.effects.valuation ? `<span class="${option.effects.valuation > 0 ? 'text-green-400' : 'text-red-400'}">Valuation: ${option.effects.valuation > 0 ? '+' : ''}${option.effects.valuation}M</span>` : ''}
+                                                ${option.effects.reputation ? `<span class="${option.effects.reputation > 0 ? 'text-green-400' : 'text-red-400'}">Reputation: ${option.effects.reputation > 0 ? '+' : ''}${option.effects.reputation}</span>` : ''}
+                                                ${option.effects.talent ? `<span class="${option.effects.talent > 0 ? 'text-green-400' : 'text-red-400'}">Talent: ${option.effects.talent > 0 ? '+' : ''}${option.effects.talent}</span>` : ''}
+                                                ${option.effects.govRelations ? `<span class="${option.effects.govRelations > 0 ? 'text-green-400' : 'text-red-400'}">Gov Relations: ${option.effects.govRelations > 0 ? '+' : ''}${option.effects.govRelations}</span>` : ''}
+                                                ${option.effects.innovation ? `<span class="${option.effects.innovation > 0 ? 'text-green-400' : 'text-red-400'}">Innovation: ${option.effects.innovation > 0 ? '+' : ''}${option.effects.innovation}</span>` : ''}
+                                                ${option.effects.contracts ? `<span class="${option.effects.contracts > 0 ? 'text-green-400' : 'text-red-400'}">Contracts: ${option.effects.contracts > 0 ? '+' : ''}${option.effects.contracts}</span>` : ''}
+                                            </div>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
-                <div>
-                  <span className="font-semibold text-green-400">Starting Capital:</span> ${gameState.cash}M
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
-                <div>
-                  <span className="font-semibold text-yellow-400">Challenge:</span> Navigate complex strategic decisions balancing growth, reputation, and resources
-                </div>
-              </div>
-            </div>
-          </div>
+            `;
+        }
 
-          <input
-            type="text"
-            placeholder="Enter your company name..."
-            className="w-full bg-slate-900/50 border border-blue-500/30 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 transition-colors mb-4"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && e.target.value.trim()) {
-                startGame(e.target.value.trim());
-              }
-            }}
-          />
-          
-          <button
-            onClick={() => {
-              const input = document.querySelector('input');
-              if (input.value.trim()) {
-                startGame(input.value.trim());
-              }
-            }}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50"
-          >
-            LAUNCH COMPANY
-          </button>
-        </div>
-      </div>
-    );
-  }
+        function startGame() {
+            const input = document.getElementById('companyNameInput');
+            const name = input.value.trim();
+            if (name) {
+                gameState.companyName = name;
+                gameState.gameStarted = true;
+                gameState.eventLog.push(`${name} founded. Target: $${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters.`);
+                presentNewScenario();
+                render();
+            }
+        }
 
-  if (gameState.gameOver) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-8 flex items-center justify-center">
-        <div className="max-w-3xl w-full bg-slate-800/50 backdrop-blur-sm border border-blue-500/30 rounded-lg p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-4">
-              {gameState.victory ? (
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-                  🎉 MISSION SUCCESS 🎉
-                </span>
-              ) : (
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-                  MISSION FAILED
-                </span>
-              )}
-            </h1>
-            <p className="text-slate-300 text-xl">{gameState.companyName}</p>
-          </div>
+        function presentNewScenario() {
+            const availableScenarios = scenarios.filter(s => 
+                !gameState.eventLog.some(log => log.includes(s.title))
+            );
+            
+            const scenario = availableScenarios.length > 0 
+                ? availableScenarios[Math.floor(Math.random() * availableScenarios.length)]
+                : scenarios[Math.floor(Math.random() * scenarios.length)];
+            
+            gameState.currentScenario = scenario;
+        }
 
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
-              <div className="text-slate-400 text-sm mb-1">Final Valuation</div>
-              <div className="text-3xl font-bold text-cyan-400">${gameState.valuation}M</div>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
-              <div className="text-slate-400 text-sm mb-1">Target</div>
-              <div className="text-3xl font-bold text-blue-400">${gameState.targetValuation}M</div>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
-              <div className="text-slate-400 text-sm mb-1">Cash Remaining</div>
-              <div className="text-2xl font-bold text-green-400">${gameState.cash}M</div>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-blue-500/20">
-              <div className="text-slate-400 text-sm mb-1">Quarters Elapsed</div>
-              <div className="text-2xl font-bold text-purple-400">{gameState.quarter - 1}</div>
-            </div>
-          </div>
+        function makeDecision(optionIndex) {
+            const option = gameState.currentScenario.options[optionIndex];
+            const effects = option.effects;
 
-          <div className="bg-slate-900/50 rounded-lg p-6 mb-6 border border-blue-500/20 max-h-64 overflow-y-auto">
-            <h2 className="text-xl font-semibold text-blue-300 mb-4">COMPANY HISTORY</h2>
-            <div className="space-y-2">
-              {gameState.eventLog.map((log, i) => (
-                <div key={i} className="text-slate-300 text-sm">{log}</div>
-              ))}
-            </div>
-          </div>
+            // Apply effects
+            gameState.valuation = Math.max(0, gameState.valuation + (effects.valuation || 0));
+            gameState.cash = Math.max(0, gameState.cash + (effects.cash || 0));
+            gameState.reputation = Math.max(0, Math.min(100, gameState.reputation + (effects.reputation || 0)));
+            gameState.talent = Math.max(0, Math.min(100, gameState.talent + (effects.talent || 0)));
+            gameState.govRelations = Math.max(0, Math.min(100, gameState.govRelations + (effects.govRelations || 0)));
+            gameState.contracts = Math.max(0, gameState.contracts + (effects.contracts || 0));
+            gameState.innovation = Math.max(0, Math.min(100, gameState.innovation + (effects.innovation || 0)));
 
-          <button
-            onClick={resetGame}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50"
-          >
-            START NEW COMPANY
-          </button>
-        </div>
-      </div>
-    );
-  }
+            // Add quarterly revenue from contracts
+            const quarterlyRevenue = gameState.contracts * 3;
+            gameState.cash += quarterlyRevenue;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/30 rounded-lg p-6 mb-6 shadow-xl">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
-                {gameState.companyName}
-              </h1>
-              <p className="text-slate-400">Quarter {gameState.quarter} of {gameState.maxQuarters}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-slate-400">Target Valuation</div>
-              <div className="text-2xl font-bold text-cyan-400">${gameState.targetValuation}M</div>
-            </div>
-          </div>
+            // Natural valuation growth based on performance
+            const performanceMultiplier = (gameState.reputation + gameState.talent + gameState.govRelations + gameState.innovation) / 400;
+            gameState.valuation += Math.floor(gameState.valuation * 0.05 * performanceMultiplier);
 
-          {/* Progress Bar */}
-          <div className="relative w-full h-3 bg-slate-900/50 rounded-full overflow-hidden border border-blue-500/20">
-            <div 
-              className="absolute h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
-              style={{ width: `${Math.min(100, (gameState.valuation / gameState.targetValuation) * 100)}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-2 text-sm text-slate-400">
-            <span>${gameState.valuation}M</span>
-            <span>{Math.min(100, Math.floor((gameState.valuation / gameState.targetValuation) * 100))}% to goal</span>
-          </div>
-        </div>
+            // Log the event
+            gameState.eventLog.push(`Q${gameState.quarter}: ${gameState.currentScenario.title} - ${option.text}`);
+            gameState.eventLog.push(`→ ${option.outcome}`);
 
-        {/* KPI Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-green-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-green-400" />
-              <span className="text-slate-400 text-sm">Cash</span>
-            </div>
-            <div className="text-2xl font-bold text-green-400">${gameState.cash}M</div>
-          </div>
+            // Advance quarter
+            gameState.quarter += 1;
+            gameState.currentScenario = null;
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-blue-400" />
-              <span className="text-slate-400 text-sm">Valuation</span>
-            </div>
-            <div className="text-2xl font-bold text-blue-400">${gameState.valuation}M</div>
-          </div>
+            // Check win/loss conditions
+            if (gameState.valuation >= gameState.targetValuation) {
+                gameState.gameOver = true;
+                gameState.victory = true;
+                gameState.eventLog.push(`🎉 VICTORY! You've reached $${gameState.valuation}M valuation!`);
+            } else if (gameState.quarter > gameState.maxQuarters) {
+                gameState.gameOver = true;
+                gameState.victory = false;
+                gameState.eventLog.push(`⏰ Time's up! Final valuation: $${gameState.valuation}M (Target: $${gameState.targetValuation}M)`);
+            } else if (gameState.cash <= 0) {
+                gameState.gameOver = true;
+                gameState.victory = false;
+                gameState.eventLog.push(`💸 Bankruptcy! You've run out of cash.`);
+            }
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-purple-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-purple-400" />
-              <span className="text-slate-400 text-sm">Talent</span>
-            </div>
-            <div className="text-2xl font-bold text-purple-400">{gameState.talent}</div>
-            <div className="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
-              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${gameState.talent}%` }} />
-            </div>
-          </div>
+            if (!gameState.gameOver) {
+                presentNewScenario();
+            }
+            
+            render();
+        }
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Award className="w-5 h-5 text-cyan-400" />
-              <span className="text-slate-400 text-sm">Reputation</span>
-            </div>
-            <div className="text-2xl font-bold text-cyan-400">{gameState.reputation}</div>
-            <div className="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
-              <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${gameState.reputation}%` }} />
-            </div>
-          </div>
+        function resetGame() {
+            gameState.companyName = '';
+            gameState.quarter = 1;
+            gameState.valuation = 50;
+            gameState.cash = 25;
+            gameState.reputation = 70;
+            gameState.talent = 60;
+            gameState.govRelations = 50;
+            gameState.contracts = 2;
+            gameState.innovation = 50;
+            gameState.gameStarted = false;
+            gameState.gameOver = false;
+            gameState.victory = false;
+            gameState.currentScenario = null;
+            gameState.eventLog = [];
+            render();
+        }
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🏛️</span>
-              <span className="text-slate-400 text-sm">Gov Relations</span>
-            </div>
-            <div className="text-2xl font-bold text-yellow-400">{gameState.govRelations}</div>
-            <div className="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
-              <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${gameState.govRelations}%` }} />
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-pink-500/30 rounded-lg p-4 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🔬</span>
-              <span className="text-slate-400 text-sm">Innovation</span>
-            </div>
-            <div className="text-2xl font-bold text-pink-400">{gameState.innovation}</div>
-            <div className="w-full h-1.5 bg-slate-900/50 rounded-full mt-2">
-              <div className="h-full bg-pink-500 rounded-full" style={{ width: `${gameState.innovation}%` }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Active Contracts */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/30 rounded-lg p-4 mb-6 shadow-lg">
-          <div className="text-sm text-slate-400">Active Contracts: <span className="text-cyan-400 font-bold">{gameState.contracts}</span> (${gameState.contracts * 3}M revenue per quarter)</div>
-        </div>
-
-        {/* Scenario Card */}
-        {gameState.currentScenario && (
-          <div className="bg-gradient-to-br from-slate-800/70 to-slate-900/70 backdrop-blur-sm border border-blue-500/40 rounded-lg p-8 shadow-2xl">
-            <div className="text-center mb-6">
-              <div className="text-6xl mb-4">{gameState.currentScenario.icon}</div>
-              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-3">
-                {gameState.currentScenario.title}
-              </h2>
-              <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-                {gameState.currentScenario.description}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {gameState.currentScenario.options.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => makeDecision(option)}
-                  className="w-full bg-slate-900/50 hover:bg-slate-800/70 border border-blue-500/30 hover:border-cyan-400/60 rounded-lg p-6 text-left transition-all shadow-lg hover:shadow-cyan-500/30 group"
-                >
-                  <div className="text-lg font-semibold text-blue-300 group-hover:text-cyan-300 mb-2 transition-colors">
-                    {option.text}
-                  </div>
-                  <div className="text-slate-400 text-sm flex flex-wrap gap-3">
-                    {option.effects.cash && (
-                      <span className={option.effects.cash > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Cash: {option.effects.cash > 0 ? '+' : ''}{option.effects.cash}M
-                      </span>
-                    )}
-                    {option.effects.valuation && (
-                      <span className={option.effects.valuation > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Valuation: {option.effects.valuation > 0 ? '+' : ''}{option.effects.valuation}M
-                      </span>
-                    )}
-                    {option.effects.reputation && (
-                      <span className={option.effects.reputation > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Reputation: {option.effects.reputation > 0 ? '+' : ''}{option.effects.reputation}
-                      </span>
-                    )}
-                    {option.effects.talent && (
-                      <span className={option.effects.talent > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Talent: {option.effects.talent > 0 ? '+' : ''}{option.effects.talent}
-                      </span>
-                    )}
-                    {option.effects.govRelations && (
-                      <span className={option.effects.govRelations > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Gov Relations: {option.effects.govRelations > 0 ? '+' : ''}{option.effects.govRelations}
-                      </span>
-                    )}
-                    {option.effects.innovation && (
-                      <span className={option.effects.innovation > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Innovation: {option.effects.innovation > 0 ? '+' : ''}{option.effects.innovation}
-                      </span>
-                    )}
-                    {option.effects.contracts && (
-                      <span className={option.effects.contracts > 0 ? 'text-green-400' : 'text-red-400'}>
-                        Contracts: {option.effects.contracts > 0 ? '+' : ''}{option.effects.contracts}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default DefenseStrategySim;
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
