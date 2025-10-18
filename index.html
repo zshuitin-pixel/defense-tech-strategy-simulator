@@ -33,8 +33,8 @@
             quarter: 1,
             maxQuarters: 12,
             valuation: 50,
-            targetValuation: 500,
-            cash: 25,
+            targetValuation: 1000,
+            cash: 15,
             reputation: 70,
             talent: 60,
             govRelations: 50,
@@ -44,8 +44,62 @@
             gameOver: false,
             victory: false,
             currentScenario: null,
-            eventLog: []
+            eventLog: [],
+            minReputation: 25,
+            minTalent: 25,
+            minGovRelations: 20
         };
+
+        const randomEvents = [
+            {
+                title: "Key Employee Departure",
+                description: "Your VP of Engineering accepts a position at SpaceX without warning.",
+                effects: { talent: -15, innovation: -10, cash: -5 },
+                icon: "💔"
+            },
+            {
+                title: "Audit Nightmare",
+                description: "A surprise DCAA audit reveals accounting irregularities requiring expensive remediation.",
+                effects: { cash: -10, govRelations: -15, reputation: -10 },
+                icon: "📋"
+            },
+            {
+                title: "Security Clearance Delays",
+                description: "Personnel security clearance delays push back your timeline on a critical program.",
+                effects: { cash: -8, govRelations: -10, contracts: -1 },
+                icon: "🔐"
+            },
+            {
+                title: "Competitor Undercuts Pricing",
+                description: "A well-funded competitor is bidding contracts at unsustainable prices, pressuring your margins.",
+                effects: { cash: -7, reputation: -5, valuation: -15 },
+                icon: "💸"
+            },
+            {
+                title: "Trade Secret Theft Allegation",
+                description: "A former employee's new employer accuses you of trade secret theft. Legal costs mount.",
+                effects: { cash: -12, reputation: -20, govRelations: -15 },
+                icon: "⚖️"
+            },
+            {
+                title: "Failed Prototype Test",
+                description: "A high-profile demonstration fails spectacularly. Video goes viral in defense circles.",
+                effects: { reputation: -25, govRelations: -20, valuation: -20, talent: -10 },
+                icon: "💥"
+            },
+            {
+                title: "Regulatory Compliance Issue",
+                description: "New ITAR regulations require expensive system retrofits across your product line.",
+                effects: { cash: -15, innovation: -10 },
+                icon: "📜"
+            },
+            {
+                title: "Key Subcontractor Bankruptcy",
+                description: "Your primary manufacturer files for Chapter 11. You need to find and qualify a new supplier fast.",
+                effects: { cash: -10, innovation: -15, reputation: -10 },
+                icon: "🏭"
+            }
+        ];
 
         const scenarios = [
             {
@@ -57,7 +111,10 @@
                     {
                         text: "Go All-In: Commit $15M and top talent",
                         effects: { cash: -15, talent: -10, contracts: 1, valuation: 40, reputation: 15, govRelations: 20 },
-                        outcome: "You assemble a world-class team and deliver an impressive proposal. The contract is yours!"
+                        outcome: "You assemble a world-class team and deliver an impressive proposal. The contract is yours!",
+                        failureChance: 0.15,
+                        failureOutcome: "Despite your best efforts, a competitor with deeper government connections wins the bid. You've burned through resources for nothing.",
+                        failureEffects: { cash: -15, talent: -15, reputation: -10, govRelations: -5, valuation: -10 }
                     },
                     {
                         text: "Conservative Bid: Minimal investment approach",
@@ -126,7 +183,10 @@
                     {
                         text: "Cash Acquisition: Buy outright",
                         effects: { cash: -30, talent: 15, innovation: 25, valuation: 60, contracts: 1 },
-                        outcome: "You gain cutting-edge technology and a talented team. Integration goes smoothly."
+                        outcome: "You gain cutting-edge technology and a talented team. Integration goes smoothly.",
+                        failureChance: 0.20,
+                        failureOutcome: "The acquisition closes but key engineers leave during integration. The technology proves harder to productize than expected.",
+                        failureEffects: { cash: -30, talent: -10, innovation: 5, valuation: 10, contracts: 0 }
                     },
                     {
                         text: "Stock Deal: Preserve cash",
@@ -172,7 +232,10 @@
                     {
                         text: "Full Investment: Rush to production",
                         effects: { cash: -25, innovation: 40, valuation: 80, reputation: 20 },
-                        outcome: "You beat competitors to market. This becomes your flagship product line."
+                        outcome: "You beat competitors to market. This becomes your flagship product line.",
+                        failureChance: 0.25,
+                        failureOutcome: "Technical challenges emerge during scale-up. The product works in the lab but production yields are terrible. You've invested heavily in a technology that's not ready.",
+                        failureEffects: { cash: -25, innovation: 10, valuation: 15, reputation: -15, talent: -10 }
                     },
                     {
                         text: "Modest Investment: Pilot program only",
@@ -275,6 +338,124 @@
                         text: "Stay Independent: Bootstrap growth",
                         effects: { cash: 10, valuation: 20, talent: 10, reputation: 5 },
                         outcome: "You maintain full control but grow more slowly."
+                    }
+                ]
+            },
+            {
+                id: 11,
+                title: "Protest Contract: Competitor Files Dispute",
+                description: "You've been awarded a $80M contract, but the losing bidder files a formal protest claiming evaluation bias. This could drag on for months.",
+                icon: "⚠️",
+                options: [
+                    {
+                        text: "Aggressive Legal Defense: $20M war chest",
+                        effects: { cash: -20, govRelations: -10, contracts: 1, valuation: 50, reputation: -5 },
+                        outcome: "You win the protest decisively. The contract proceeds but you've made an enemy."
+                    },
+                    {
+                        text: "Negotiate Settlement: Split the contract",
+                        effects: { cash: -8, contracts: 0, valuation: 15, reputation: -15 },
+                        outcome: "You agree to a reduced scope. Less revenue but avoids a prolonged legal battle."
+                    },
+                    {
+                        text: "Wait It Out: Minimal legal spend",
+                        effects: { cash: -5, talent: -15, reputation: -20, govRelations: -15 },
+                        outcome: "The protest drags on for 9 months. By the time you win, you've lost key team members and momentum."
+                    }
+                ]
+            },
+            {
+                id: 12,
+                title: "Classified Breach Investigation",
+                description: "A laptop containing classified information goes missing. FBI and DoD investigators descend on your facility.",
+                icon: "🚨",
+                options: [
+                    {
+                        text: "Full Cooperation: Transparent approach",
+                        effects: { cash: -15, reputation: -10, govRelations: 5, talent: -10 },
+                        outcome: "Investigation clears you of intentional wrongdoing. Your transparent approach is noted positively."
+                    },
+                    {
+                        text: "Damage Control: PR and legal blitz",
+                        effects: { cash: -25, reputation: 10, govRelations: -10, contracts: 0 },
+                        outcome: "You minimize public perception damage but relationships with program managers suffer."
+                    },
+                    {
+                        text: "Minimal Response: Hope it blows over",
+                        effects: { cash: -5, reputation: -30, govRelations: -35, contracts: -2, valuation: -40 },
+                        outcome: "This was a catastrophic mistake. Your facility clearance is suspended. Multiple contracts are terminated."
+                    }
+                ]
+            },
+            {
+                id: 13,
+                title: "Hostile Takeover Attempt",
+                description: "A defense industry giant makes an unsolicited offer to acquire your company at a significant premium. Your board is divided.",
+                icon: "🎯",
+                options: [
+                    {
+                        text: "Accept Offer: $200M premium exit",
+                        effects: { cash: 200, valuation: 200, talent: -30, innovation: -20 },
+                        outcome: "You accept the acquisition. Immediate value creation but you're no longer independent."
+                    },
+                    {
+                        text: "Poison Pill Defense: Fight to stay independent",
+                        effects: { cash: -30, talent: 10, valuation: 50, reputation: 10, govRelations: 5 },
+                        outcome: "You successfully fend off the takeover. Team rallies around independence but it was expensive."
+                    },
+                    {
+                        text: "White Knight: Seek friendly acquirer",
+                        effects: { cash: -15, valuation: 80, talent: 5, reputation: 5 },
+                        outcome: "You find a better cultural fit willing to keep you autonomous. A compromise solution."
+                    }
+                ]
+            },
+            {
+                id: 14,
+                title: "Geopolitical Crisis",
+                description: "Tensions escalate in the Taiwan Strait. DoD is urgently seeking rapid capability development. This is your moment - if you can deliver.",
+                icon: "🌏",
+                options: [
+                    {
+                        text: "Emergency Response: 24/7 operations",
+                        effects: { cash: -20, talent: -20, innovation: 20, contracts: 2, valuation: 100, govRelations: 30, reputation: 25 },
+                        outcome: "You deliver critical capabilities in record time. You're now on the map as a tier-one contractor.",
+                        failureChance: 0.30,
+                        failureOutcome: "You overcommit and fail to deliver. Your reputation as a reliable partner is destroyed.",
+                        failureEffects: { cash: -25, talent: -25, reputation: -35, govRelations: -40, contracts: -1, valuation: -50 }
+                    },
+                    {
+                        text: "Measured Response: Work within limits",
+                        effects: { cash: -10, contracts: 1, valuation: 30, govRelations: 10, reputation: 5 },
+                        outcome: "You make a solid contribution without overextending. Safe but not spectacular."
+                    },
+                    {
+                        text: "Pass: Too risky right now",
+                        effects: { cash: 5, govRelations: -20, reputation: -15, valuation: -20 },
+                        outcome: "When the nation needed you, you played it safe. This won't be forgotten."
+                    }
+                ]
+            },
+            {
+                id: 15,
+                title: "Insider Trading Allegation",
+                description: "The SEC is investigating suspicious stock trades by your CFO ahead of a major contract announcement.",
+                icon: "📊",
+                options: [
+                    {
+                        text: "Fire CFO Immediately: Distance the company",
+                        effects: { cash: -10, reputation: 5, talent: -15, govRelations: 5 },
+                        outcome: "Swift action limits damage. Finding a replacement CFO with security clearance takes months."
+                    },
+                    {
+                        text: "Stand By CFO: Internal investigation first",
+                        effects: { cash: -5, reputation: -25, govRelations: -20, valuation: -30 },
+                        outcome: "Your loyalty backfires. The evidence is damning and your reputation suffers by association."
+                    },
+                    {
+                        text: "Cooperate with SEC: Full transparency",
+                        effects: { cash: -15, reputation: 10, talent: -10, govRelations: 15 },
+                        outcome: "The investigation exonerates the company but not the CFO. Your cooperation is appreciated."
                     }
                 ]
             }
@@ -560,7 +741,14 @@
 
         function makeDecision(optionIndex) {
             const option = gameState.currentScenario.options[optionIndex];
-            const effects = option.effects;
+            let effects = option.effects;
+            let outcome = option.outcome;
+
+            // Check for random failure
+            if (option.failureChance && Math.random() < option.failureChance) {
+                effects = option.failureEffects;
+                outcome = option.failureOutcome;
+            }
 
             // Apply effects
             gameState.valuation = Math.max(0, gameState.valuation + (effects.valuation || 0));
@@ -579,9 +767,26 @@
             const performanceMultiplier = (gameState.reputation + gameState.talent + gameState.govRelations + gameState.innovation) / 400;
             gameState.valuation += Math.floor(gameState.valuation * 0.05 * performanceMultiplier);
 
+            // Random event chance (25% each quarter)
+            let randomEventOccurred = false;
+            if (Math.random() < 0.25) {
+                const randomEvent = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+                gameState.valuation = Math.max(0, gameState.valuation + (randomEvent.effects.valuation || 0));
+                gameState.cash = Math.max(0, gameState.cash + (randomEvent.effects.cash || 0));
+                gameState.reputation = Math.max(0, Math.min(100, gameState.reputation + (randomEvent.effects.reputation || 0)));
+                gameState.talent = Math.max(0, Math.min(100, gameState.talent + (randomEvent.effects.talent || 0)));
+                gameState.govRelations = Math.max(0, Math.min(100, gameState.govRelations + (randomEvent.effects.govRelations || 0)));
+                gameState.contracts = Math.max(0, gameState.contracts + (randomEvent.effects.contracts || 0));
+                gameState.innovation = Math.max(0, Math.min(100, gameState.innovation + (randomEvent.effects.innovation || 0)));
+                
+                gameState.eventLog.push(`${randomEvent.icon} RANDOM EVENT: ${randomEvent.title}`);
+                gameState.eventLog.push(`→ ${randomEvent.description}`);
+                randomEventOccurred = true;
+            }
+
             // Log the event
             gameState.eventLog.push(`Q${gameState.quarter}: ${gameState.currentScenario.title} - ${option.text}`);
-            gameState.eventLog.push(`→ ${option.outcome}`);
+            gameState.eventLog.push(`→ ${outcome}`);
 
             // Advance quarter
             gameState.quarter += 1;
@@ -591,15 +796,27 @@
             if (gameState.valuation >= gameState.targetValuation) {
                 gameState.gameOver = true;
                 gameState.victory = true;
-                gameState.eventLog.push(`🎉 VICTORY! You've reached $${gameState.valuation}M valuation!`);
+                gameState.eventLog.push(`🎉 VICTORY! You've reached ${gameState.valuation}M valuation!`);
             } else if (gameState.quarter > gameState.maxQuarters) {
                 gameState.gameOver = true;
                 gameState.victory = false;
-                gameState.eventLog.push(`⏰ Time's up! Final valuation: $${gameState.valuation}M (Target: $${gameState.targetValuation}M)`);
+                gameState.eventLog.push(`⏰ Time's up! Final valuation: ${gameState.valuation}M (Target: ${gameState.targetValuation}M)`);
             } else if (gameState.cash <= 0) {
                 gameState.gameOver = true;
                 gameState.victory = false;
                 gameState.eventLog.push(`💸 Bankruptcy! You've run out of cash.`);
+            } else if (gameState.reputation < gameState.minReputation) {
+                gameState.gameOver = true;
+                gameState.victory = false;
+                gameState.eventLog.push(`📉 Reputation collapse! Your reputation has fallen below ${gameState.minReputation}. No serious clients will work with you.`);
+            } else if (gameState.talent < gameState.minTalent) {
+                gameState.gameOver = true;
+                gameState.victory = false;
+                gameState.eventLog.push(`👥 Talent exodus! Your talent pool has dropped below ${gameState.minTalent}. You can't execute contracts.`);
+            } else if (gameState.govRelations < gameState.minGovRelations) {
+                gameState.gameOver = true;
+                gameState.victory = false;
+                gameState.eventLog.push(`🏛️ Government relations destroyed! Your standing has fallen below ${gameState.minGovRelations}. You're effectively blacklisted.`);
             }
 
             if (!gameState.gameOver) {
@@ -613,7 +830,8 @@
             gameState.companyName = '';
             gameState.quarter = 1;
             gameState.valuation = 50;
-            gameState.cash = 25;
+            gameState.targetValuation = 1000;
+            gameState.cash = 15;
             gameState.reputation = 70;
             gameState.talent = 60;
             gameState.govRelations = 50;
@@ -624,6 +842,9 @@
             gameState.victory = false;
             gameState.currentScenario = null;
             gameState.eventLog = [];
+            gameState.minReputation = 25;
+            gameState.minTalent = 25;
+            gameState.minGovRelations = 20;
             render();
         }
 
