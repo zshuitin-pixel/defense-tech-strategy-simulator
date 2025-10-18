@@ -3,670 +3,757 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanguard Defense: Strategic Planning Simulator</title>
+    <title>Strategic Ascent - Startup Card Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: #e0e7ff;
             min-height: 100vh;
             margin: 0;
-            padding: 2rem 1rem;
-            box-sizing: border-box;
+            padding: 1rem;
         }
-        .container {
-            max-width: 800px;
+        .game-board {
+            max-width: 1400px;
             margin: 0 auto;
         }
-        .status-big {
-            background: rgba(15, 23, 42, 0.8);
-            border: 2px solid rgba(59, 130, 246, 0.3);
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .resource {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .resource-name {
+            font-size: 0.8rem;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .resource-value {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0.5rem 0;
+        }
+        .resource-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .resource-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .card {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+            border: 2px solid #6366f1;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
+            border-color: #818cf8;
+        }
+        .card.selected {
+            border-color: #fbbf24;
+            background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+        }
+        .card-energy {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #000;
+            font-size: 1.2rem;
+        }
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #818cf8;
+            margin-bottom: 0.75rem;
+        }
+        .card-description {
+            font-size: 0.9rem;
+            color: #c7d2fe;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+        .card-effects {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.3);
+            font-size: 0.85rem;
+        }
+        .effect {
+            margin: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .effect-positive { color: #4ade80; }
+        .effect-negative { color: #f87171; }
+        .effect-neutral { color: #fbbf24; }
+        .hand {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .event-card {
+            background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
+            border: 3px solid #dc2626;
             border-radius: 1.5rem;
             padding: 2rem;
             margin-bottom: 2rem;
             text-align: center;
         }
-        .metric-large {
-            font-size: 3rem;
+        .event-title {
+            font-size: 1.8rem;
             font-weight: 900;
-            line-height: 1;
-            margin-bottom: 0.5rem;
+            color: #fecaca;
+            margin-bottom: 1rem;
         }
-        .metric-label {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .event-description {
+            font-size: 1.1rem;
+            color: #fecaca;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
         }
-        .runway-warning {
-            color: #fbbf24;
-            font-size: 1.2rem;
+        .event-threat {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-top: 1rem;
         }
-        .runway-critical {
-            color: #ef4444;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .action-points {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            color: #0f172a;
-            padding: 1rem 2rem;
-            border-radius: 1rem;
-            font-size: 1.5rem;
-            font-weight: 900;
-            display: inline-block;
-            margin: 1.5rem 0;
-        }
-        .action-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 2px solid rgba(59, 130, 246, 0.2);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .action-card:hover:not(.disabled) {
-            border-color: rgba(59, 130, 246, 0.6);
-            background: rgba(30, 41, 59, 0.8);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
-        }
-        .action-card.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            border-color: rgba(100, 116, 139, 0.2);
-        }
-        .action-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #60a5fa;
-            margin-bottom: 0.5rem;
-        }
-        .action-description {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 0.75rem;
-        }
-        .action-cost {
-            display: inline-block;
-            background: rgba(251, 191, 36, 0.1);
-            color: #fbbf24;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-right: 0.5rem;
-        }
-        .action-impact {
-            display: inline-block;
-            background: rgba(74, 222, 128, 0.1);
-            color: #4ade80;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .details-section {
-            background: rgba(15, 23, 42, 0.4);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .details-toggle {
-            color: #60a5fa;
-            cursor: pointer;
-            font-weight: 600;
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            background: rgba(59, 130, 246, 0.1);
-            margin-bottom: 1rem;
-            transition: all 0.2s;
-        }
-        .details-toggle:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        .details-content {
-            display: none;
-        }
-        .details-content.show {
-            display: block;
-        }
-        .product-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: rgba(30, 41, 59, 0.4);
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background-color: #334155;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 0.5rem 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            transition: width 0.5s ease;
-        }
-        .milestone-tag {
-            display: inline-block;
-            font-size: 0.75rem;
-            background: rgba(74, 222, 128, 0.1);
-            color: #4ade80;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.25rem;
-            margin-left: 0.5rem;
-        }
-        .log-message {
-            background: rgba(59, 130, 246, 0.1);
-            border-left: 3px solid #3b82f6;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-        .log-message.impact {
-            background: rgba(192, 132, 252, 0.1);
-            border-left-color: #a855f7;
-            font-weight: 600;
-        }
-        .log-message.success {
-            background: rgba(74, 222, 128, 0.1);
-            border-left-color: #4ade80;
-        }
-        .log-message.warning {
-            background: rgba(251, 191, 36, 0.1);
-            border-left-color: #fbbf24;
-        }
-        .log-message.error {
-            background: rgba(239, 68, 68, 0.1);
-            border-left-color: #ef4444;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        .btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
+            border: none;
             padding: 1rem 2rem;
             border-radius: 0.75rem;
-            border: none;
             font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
-            width: 100%;
-            margin-top: 1rem;
             transition: all 0.2s;
         }
-        .btn-primary:hover {
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
         }
-        .goal-progress {
-            background: rgba(15, 23, 42, 0.6);
-            padding: 1rem;
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        .path-choice {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .path-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .path-card:hover {
+            border-color: #818cf8;
+            transform: scale(1.05);
+        }
+        .path-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        .path-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .path-description {
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 0.75rem;
-            margin-top: 1rem;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 2rem;
         }
-        .goal-bar {
+        .log-entry {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #6366f1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+        }
+        .log-entry.success { border-left-color: #4ade80; }
+        .log-entry.warning { border-left-color: #fbbf24; }
+        .log-entry.error { border-left-color: #ef4444; }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 12px;
-            background-color: #334155;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-        .goal-fill {
             height: 100%;
-            background: linear-gradient(90deg, #8b5cf6, #a855f7);
-            transition: width 0.5s ease;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
-
+        .modal-content {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border: 3px solid #6366f1;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 600px;
+            text-align: center;
+        }
         @media (max-width: 768px) {
-            body {
-                padding: 1rem 0.5rem;
+            .resources {
+                grid-template-columns: repeat(2, 1fr);
             }
-            .metric-large {
-                font-size: 2.5rem;
+            .hand {
+                grid-template-columns: 1fr;
             }
-            .action-title {
-                font-size: 1.1rem;
-            }
-            .action-card {
-                padding: 1rem;
+            .path-choice {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Big Status Display -->
-        <div class="status-big">
-            <div class="metric-label">Cash Reserves</div>
-            <div id="cashDisplay" class="metric-large">$2.0M</div>
-            <div id="runwayDisplay" class="runway-warning">8 months runway</div>
-            
-            <div class="goal-progress">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span class="metric-label">Current Valuation</span>
-                    <span class="metric-label">Goal: $1,000M</span>
+    <div class="game-board">
+        <h1 style="text-align: center; font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; color: #818cf8;">
+            ⚡ STRATEGIC ASCENT ⚡
+        </h1>
+        <p style="text-align: center; color: #a5b4fc; margin-bottom: 2rem;">
+            Quarter <span id="quarter">1</span> | Energy: <span id="energy" style="color: #fbbf24; font-weight: 700;">3</span>
+        </p>
+
+        <div class="resources">
+            <div class="resource">
+                <div class="resource-name">💰 Cash</div>
+                <div class="resource-value" id="cash">$2.0M</div>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="cashBar" style="width: 50%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
                 </div>
-                <div id="valuationDisplay" style="font-size: 1.5rem; font-weight: 700; color: #a855f7;">$15M</div>
-                <div class="goal-bar">
-                    <div id="goalBar" class="goal-fill" style="width: 1.5%;"></div>
+            </div>
+            <div class="resource">
+                <div class="resource-name">😊 Morale</div>
+                <div class="resource-value" id="morale">70%</div>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="moraleBar" style="width: 70%; background: linear-gradient(90deg, #4ade80, #22c55e);"></div>
+                </div>
+            </div>
+            <div class="resource">
+                <div class="resource-name">⭐ Reputation</div>
+                <div class="resource-value" id="reputation">40%</div>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="reputationBar" style="width: 40%; background: linear-gradient(90deg, #818cf8, #6366f1);"></div>
+                </div>
+            </div>
+            <div class="resource">
+                <div class="resource-name">📦 Product</div>
+                <div class="resource-value" id="product">25%</div>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="productBar" style="width: 25%; background: linear-gradient(90deg, #a855f7, #9333ea);"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Quarter & Action Points -->
-        <div style="text-align: center;">
-            <div style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 1rem;">
-                Quarter <span id="quarterDisplay">1</span>, <span id="yearDisplay">2025</span>
-            </div>
-            <div class="action-points">
-                <span id="apDisplay">3</span> Actions Remaining
-            </div>
-        </div>
+        <div id="gameContent"></div>
 
-        <!-- Action Cards -->
-        <div id="actionsContainer">
-            <!-- Populated by JavaScript -->
-        </div>
-
-        <!-- Details Toggle -->
-        <div class="details-section">
-            <div class="details-toggle" onclick="toggleDetails('products')">
-                📦 View Product Progress
-            </div>
-            <div id="productsDetails" class="details-content">
-                <!-- Populated by JavaScript -->
-            </div>
-
-            <div class="details-toggle" onclick="toggleDetails('metrics')">
-                📊 View All Metrics
-            </div>
-            <div id="metricsDetails" class="details-content">
-                <!-- Populated by JavaScript -->
-            </div>
-
-            <div class="details-toggle" onclick="toggleDetails('log')">
-                📋 Recent Activity (Last 5)
-            </div>
-            <div id="logDetails" class="details-content">
-                <!-- Populated by JavaScript -->
-            </div>
-        </div>
-
-        <!-- End Quarter Button -->
-        <button class="btn-primary" onclick="advanceQuarter()">
-            End Quarter & Continue ⏭️
-        </button>
+        <div class="log" id="log"></div>
     </div>
 
     <script>
         const gameState = {
             quarter: 1,
-            year: 2025,
+            energy: 3,
+            maxEnergy: 3,
             cash: 2000000,
-            valuation: 15000000,
-            employees: 12,
+            maxCash: 4000000,
             morale: 70,
             reputation: 40,
-            dodRelations: 35,
-            burnRate: 250000,
-            revenue: 0,
-            actionPoints: 3,
-            maxActionPoints: 3,
-            products: {
-                aiSurveillance: { 
-                    name: 'AI Surveillance', 
-                    progress: 25, 
-                    deployed: false, 
-                    revenue: 100000,
-                    milestones: [60, 80, 100]
-                },
-                autonomousDrone: { 
-                    name: 'Autonomous Drones', 
-                    progress: 0, 
-                    deployed: false, 
-                    revenue: 150000,
-                    milestones: [60, 100]
-                }
-            },
-            log: [],
-            contracts: [],
-            gameOver: false,
-            fundingRound: 'Seed'
+            product: 25,
+            hand: [],
+            deck: [],
+            discardPile: [],
+            phase: 'draw',
+            selectedCards: [],
+            currentEvent: null
         };
 
-        const actions = [
-            {
-                id: 'hire',
-                title: '👥 Hire Engineering Team',
-                description: 'Bring on 5 engineers to accelerate product development',
-                cost: '$200K + $50K/mo burn',
-                impact: '+25% dev speed, +morale',
-                apCost: 1,
-                canUse: function() { return gameState.cash >= 200000; },
-                execute: function() {
-                    gameState.cash -= 200000;
-                    gameState.employees += 5;
-                    gameState.burnRate += 50000;
-                    gameState.morale = Math.min(100, gameState.morale + 10);
-                    addLog('Hired 5 engineers. Team: ' + gameState.employees + ', Burn: +$50K/mo', 'success');
-                    addLog('IMPACT: All products develop 25% faster next quarter', 'impact');
+        const cardLibrary = {
+            hireEngineers: {
+                id: 'hireEngineers',
+                name: 'Hire Engineers',
+                energy: 2,
+                description: 'Bring on talented engineers to accelerate development',
+                effects: {
+                    cash: -200000,
+                    product: 15,
+                    morale: 5
                 }
             },
-            {
-                id: 'raise',
-                title: '💰 Raise Funding',
-                description: 'Secure next funding round to extend runway',
-                cost: function() { 
-                    if (gameState.fundingRound === 'Seed') return '15% dilution';
-                    if (gameState.fundingRound === 'Series A') return '12% dilution';
-                    return '10% dilution';
-                },
-                impact: '+$5-30M cash',
-                apCost: 1,
-                canUse: function() { return true; },
-                execute: function() {
-                    var funding, newRound;
-                    if (gameState.fundingRound === 'Seed') {
-                        funding = 5000000;
-                        newRound = 'Series A';
-                    } else if (gameState.fundingRound === 'Series A') {
-                        funding = 15000000;
-                        newRound = 'Series B';
-                    } else {
-                        funding = 30000000;
-                        newRound = 'Series C';
-                    }
-                    gameState.cash += funding;
-                    gameState.valuation = Math.floor(gameState.valuation * 1.6);
-                    gameState.fundingRound = newRound;
-                    addLog('Raised ' + newRound + ': +$' + (funding/1000000) + 'M cash', 'success');
-                    addLog('IMPACT: Valuation now $' + (gameState.valuation/1000000).toFixed(1) + 'M. Investors expect growth.', 'impact');
+            raiseFunding: {
+                id: 'raiseFunding',
+                name: 'Raise Funding',
+                energy: 1,
+                description: 'Secure investor capital to extend runway',
+                effects: {
+                    cash: 1000000,
+                    reputation: 10
                 }
             },
-            {
-                id: 'dev_ai',
-                title: '🤖 Develop AI Surveillance',
-                description: 'Focus team effort on AI product development',
-                cost: 'No cost',
-                impact: '+20-25% progress',
-                apCost: 1,
-                canUse: function() { return gameState.products.aiSurveillance.progress < 100; },
-                execute: function() {
-                    const boost = gameState.employees >= 15 ? 25 : 20;
-                    gameState.products.aiSurveillance.progress = Math.min(100, gameState.products.aiSurveillance.progress + boost);
-                    addLog('AI Surveillance: +' + boost + '% (now ' + gameState.products.aiSurveillance.progress + '%)', 'success');
-                    checkMilestones('aiSurveillance');
+            focusDevelopment: {
+                id: 'focusDevelopment',
+                name: 'Focus Development',
+                energy: 1,
+                description: 'All hands on deck for product sprint',
+                effects: {
+                    product: 20,
+                    morale: -5
                 }
             },
-            {
-                id: 'dev_drone',
-                title: '🚁 Develop Drones',
-                description: 'Invest in autonomous drone technology (higher risk, higher reward)',
-                cost: '$300K',
-                impact: '+15-20% progress',
-                apCost: 1,
-                canUse: function() { return gameState.cash >= 300000; },
-                execute: function() {
-                    gameState.cash -= 300000;
-                    const oldProgress = gameState.products.autonomousDrone.progress;
-                    gameState.products.autonomousDrone.progress = Math.min(100, Math.max(oldProgress, 20) + 15);
-                    addLog('Drone program: +15% (now ' + gameState.products.autonomousDrone.progress + '%)', 'success');
-                    addLog('IMPACT: High-risk bet. Drones worth more revenue than AI if successful.', 'impact');
+            marketingPush: {
+                id: 'marketingPush',
+                name: 'Marketing Push',
+                energy: 1,
+                description: 'Launch campaign to build brand awareness',
+                effects: {
+                    cash: -150000,
+                    reputation: 15
                 }
             },
-            {
-                id: 'contract',
-                title: '📋 Bid DoD Contract',
-                description: 'Compete for Department of Defense contract',
-                cost: '$100K',
-                impact: 'Win = +$250K/mo revenue',
-                apCost: 1,
-                canUse: function() { 
-                    const hasDeployed = Object.values(gameState.products).some(function(p) { return p.deployed; });
-                    return gameState.cash >= 100000 && gameState.dodRelations >= 50 && hasDeployed;
-                },
-                execute: function() {
-                    gameState.cash -= 100000;
-                    const winChance = (gameState.dodRelations * 0.6) + (gameState.reputation * 0.4);
-                    addLog('Contract bid submitted. Win chance: ' + winChance.toFixed(0) + '%', 'system');
-                    
-                    if (Math.random() * 100 < winChance) {
-                        const contractValue = Math.floor(Math.random() * 1000000) + 1500000;
-                        gameState.revenue += Math.floor(contractValue / 6);
-                        gameState.valuation = Math.floor(gameState.valuation * 1.2);
-                        addLog('CONTRACT WON! +$' + (contractValue/6000).toFixed(0) + 'K/mo revenue', 'success');
-                        addLog('IMPACT: Validates product. Opens doors to bigger contracts.', 'impact');
-                    } else {
-                        addLog('Contract bid failed. Lost $100K in pursuit costs.', 'error');
-                    }
+            teamBuilding: {
+                id: 'teamBuilding',
+                name: 'Team Building',
+                energy: 1,
+                description: 'Invest in culture and morale',
+                effects: {
+                    cash: -100000,
+                    morale: 20
                 }
             },
-            {
-                id: 'marketing',
-                title: '📣 Marketing Campaign',
-                description: 'Increase brand awareness and DoD visibility',
-                cost: '$150K',
-                impact: '+reputation, +DoD relations',
-                apCost: 1,
-                canUse: function() { return gameState.cash >= 150000; },
-                execute: function() {
-                    gameState.cash -= 150000;
-                    gameState.reputation = Math.min(100, gameState.reputation + 12);
-                    gameState.dodRelations = Math.min(100, gameState.dodRelations + 8);
-                    addLog('Marketing campaign launched', 'success');
-                    addLog('IMPACT: Better positioning for next contract bid', 'impact');
+            cutCosts: {
+                id: 'cutCosts',
+                name: 'Cut Costs',
+                energy: 1,
+                description: 'Tighten belts to preserve runway',
+                effects: {
+                    cash: 200000,
+                    morale: -15
                 }
             },
-            {
-                id: 'optimize',
-                title: '✂️ Cut Costs',
-                description: 'Reduce burn rate to extend runway (hurts morale)',
-                cost: 'No cost',
-                impact: '-15% burn, -15% morale',
-                apCost: 1,
-                canUse: function() { return gameState.burnRate > 200000; },
-                execute: function() {
-                    gameState.burnRate = Math.max(200000, Math.floor(gameState.burnRate * 0.85));
-                    gameState.morale = Math.max(0, gameState.morale - 15);
-                    addLog('Operations optimized: -15% burn', 'success');
-                    addLog('CONSEQUENCE: Team unhappy. May slow development.', 'warning');
+            dodOutreach: {
+                id: 'dodOutreach',
+                name: 'DoD Outreach',
+                energy: 2,
+                description: 'Build relationships with defense buyers',
+                effects: {
+                    cash: -100000,
+                    reputation: 12,
+                    product: 5
                 }
+            },
+            quickWin: {
+                id: 'quickWin',
+                name: 'Quick Win',
+                energy: 1,
+                description: 'Ship MVP fast to validate',
+                effects: {
+                    product: 12,
+                    reputation: 8
+                }
+            }
+        };
+
+        const events = [
+            {
+                title: '🏢 Competitor Launches',
+                description: 'A well-funded competitor just announced their product. Market pressure intensifies.',
+                threat: 15,
+                successText: 'You weathered the storm. Differentiation matters.',
+                failText: 'Lost market position to competitor. Reputation damaged.'
+            },
+            {
+                title: '💼 Investor Meeting',
+                description: 'Board wants to see progress. Show them results or face tough questions.',
+                threat: 20,
+                successText: 'Impressed the board. Confidence is high.',
+                failText: 'Disappointing update. Board losing confidence.'
+            },
+            {
+                title: '👨‍💼 Key Employee Recruited',
+                description: 'Top talent from Big Tech is interested. But they are expensive.',
+                threat: 12,
+                successText: 'Hired rockstar engineer. Team capability soars.',
+                failText: 'Missed opportunity. Went to competitor instead.'
+            },
+            {
+                title: '📋 DoD RFP Released',
+                description: 'Perfect contract opportunity, but you need strong tech and reputation to win.',
+                threat: 18,
+                successText: 'Won the contract! Major revenue and validation.',
+                failText: 'Bid rejected. Not ready for prime time.'
+            },
+            {
+                title: '⚡ Tech Breakthrough Needed',
+                description: 'Product is stuck. Need innovation to move forward.',
+                threat: 15,
+                successText: 'Breakthrough achieved! Product quality jumps.',
+                failText: 'Still stuck on technical challenges.'
             }
         ];
 
-        function addLog(message, type) {
-            gameState.log.unshift({msg: message, type: type || 'system'});
-            if (gameState.log.length > 10) gameState.log.pop();
+        function initDeck() {
+            gameState.deck = [
+                'hireEngineers', 'raiseFunding', 'focusDevelopment', 
+                'marketingPush', 'teamBuilding', 'cutCosts',
+                'dodOutreach', 'quickWin', 'focusDevelopment', 'marketingPush'
+            ];
+            shuffleDeck();
         }
 
-        function checkMilestones(productKey) {
-            const product = gameState.products[productKey];
-            product.milestones.forEach(function(threshold) {
-                if (product.progress >= threshold && product.progress - 20 < threshold) {
-                    if (threshold === 60) {
-                        addLog('🎉 MILESTONE: ' + product.name + ' can now demo to DoD!', 'success');
-                    } else if (threshold === 80) {
-                        addLog('🎉 MILESTONE: ' + product.name + ' ready for contract bids!', 'success');
-                    } else if (threshold === 100) {
-                        product.deployed = true;
-                        gameState.revenue += product.revenue;
-                        gameState.valuation = Math.floor(gameState.valuation * 1.25);
-                        addLog('🚀 ' + product.name + ' DEPLOYED! +$' + (product.revenue/1000) + 'K/mo revenue', 'success');
-                    }
+        function shuffleDeck() {
+            for (let i = gameState.deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
+            }
+        }
+
+        function drawHand() {
+            gameState.hand = [];
+            for (let i = 0; i < 5 && gameState.deck.length > 0; i++) {
+                gameState.hand.push(gameState.deck.pop());
+            }
+            if (gameState.deck.length === 0) {
+                gameState.deck = [...gameState.discardPile];
+                gameState.discardPile = [];
+                shuffleDeck();
+            }
+        }
+
+        function log(message, type) {
+            type = type || 'info';
+            const logEl = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = 'Q' + gameState.quarter + ': ' + message;
+            logEl.insertBefore(entry, logEl.firstChild);
+            if (logEl.children.length > 10) {
+                logEl.removeChild(logEl.lastChild);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('quarter').textContent = gameState.quarter;
+            document.getElementById('energy').textContent = gameState.energy;
+            
+            document.getElementById('cash').textContent = '$' + (gameState.cash / 1000000).toFixed(1) + 'M';
+            document.getElementById('cashBar').style.width = Math.min(100, (gameState.cash / gameState.maxCash) * 100) + '%';
+            
+            document.getElementById('morale').textContent = gameState.morale + '%';
+            document.getElementById('moraleBar').style.width = gameState.morale + '%';
+            
+            document.getElementById('reputation').textContent = gameState.reputation + '%';
+            document.getElementById('reputationBar').style.width = gameState.reputation + '%';
+            
+            document.getElementById('product').textContent = gameState.product + '%';
+            document.getElementById('productBar').style.width = gameState.product + '%';
+        }
+
+        function renderHand() {
+            const content = document.getElementById('gameContent');
+            
+            let html = '<h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #a5b4fc;">Your Hand - Select cards to play</h2>';
+            html += '<div class="hand">';
+            
+            gameState.hand.forEach(function(cardId) {
+                const card = cardLibrary[cardId];
+                const selected = gameState.selectedCards.includes(cardId);
+                const canAfford = gameState.energy >= card.energy;
+                
+                html += '<div class="card ' + (selected ? 'selected' : '') + '" onclick="toggleCard(\'' + cardId + '\')" style="' + (!canAfford ? 'opacity: 0.5;' : '') + '">';
+                html += '<div class="card-energy">' + card.energy + '</div>';
+                html += '<div class="card-title">' + card.name + '</div>';
+                html += '<div class="card-description">' + card.description + '</div>';
+                html += '<div class="card-effects">';
+                
+                if (card.effects.cash) {
+                    const sign = card.effects.cash > 0 ? '+' : '';
+                    const className = card.effects.cash > 0 ? 'effect-positive' : 'effect-negative';
+                    html += '<div class="effect ' + className + '">💰 ' + sign + '$' + (card.effects.cash / 1000) + 'K</div>';
                 }
-            });
-        }
-
-        function renderActions() {
-            const container = document.getElementById('actionsContainer');
-            container.innerHTML = '';
-            
-            actions.forEach(function(action) {
-                const canUse = action.canUse();
-                const disabled = !canUse || gameState.actionPoints < action.apCost;
-                
-                const card = document.createElement('div');
-                card.className = 'action-card' + (disabled ? ' disabled' : '');
-                
-                const costText = typeof action.cost === 'function' ? action.cost() : action.cost;
-                
-                card.innerHTML = '<div class="action-title">' + action.title + '</div>' +
-                    '<div class="action-description">' + action.description + '</div>' +
-                    '<div><span class="action-cost">' + costText + '</span>' +
-                    '<span class="action-impact">' + action.impact + '</span></div>';
-                
-                if (!disabled) {
-                    card.onclick = function() {
-                        if (gameState.actionPoints >= action.apCost) {
-                            gameState.actionPoints -= action.apCost;
-                            action.execute();
-                            render();
-                        }
-                    };
+                if (card.effects.morale) {
+                    const sign = card.effects.morale > 0 ? '+' : '';
+                    const className = card.effects.morale > 0 ? 'effect-positive' : 'effect-negative';
+                    html += '<div class="effect ' + className + '">😊 ' + sign + card.effects.morale + '%</div>';
+                }
+                if (card.effects.reputation) {
+                    const sign = card.effects.reputation > 0 ? '+' : '';
+                    const className = card.effects.reputation > 0 ? 'effect-positive' : 'effect-negative';
+                    html += '<div class="effect ' + className + '">⭐ ' + sign + card.effects.reputation + '%</div>';
+                }
+                if (card.effects.product) {
+                    const sign = card.effects.product > 0 ? '+' : '';
+                    const className = card.effects.product > 0 ? 'effect-positive' : 'effect-negative';
+                    html += '<div class="effect ' + className + '">📦 ' + sign + card.effects.product + '%</div>';
                 }
                 
-                container.appendChild(card);
+                html += '</div></div>';
             });
+            
+            html += '</div>';
+            html += '<div style="text-align: center; margin-top: 2rem;">';
+            html += '<button class="btn" onclick="skipCombat()">Skip Combat (No Reward)</button> ';
+            html += '<button class="btn btn-danger" onclick="endTurn()" style="margin-left: 1rem;">End Turn</button>';
+            html += '</div>';
+            
+            content.innerHTML = html;
         }
 
-        function renderProducts() {
-            const container = document.getElementById('productsDetails');
-            container.innerHTML = '';
+        function renderEvent() {
+            const event = gameState.currentEvent;
+            const content = document.getElementById('gameContent');
             
-            Object.keys(gameState.products).forEach(function(key) {
-                const p = gameState.products[key];
-                const div = document.createElement('div');
-                div.className = 'product-row';
+            let html = '<div class="event-card">';
+            html += '<div class="event-title">' + event.title + '</div>';
+            html += '<div class="event-description">' + event.description + '</div>';
+            html += '<div class="event-threat">Threat Level: ' + event.threat + ' - Play cards totaling ' + event.threat + '+ value to succeed</div>';
+            html += '</div>';
+            
+            html += '<h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #a5b4fc;">Select cards to combat this event</h2>';
+            html += '<div class="hand">';
+            
+            gameState.hand.forEach(function(cardId) {
+                const card = cardLibrary[cardId];
+                const selected = gameState.selectedCards.includes(cardId);
+                const canAfford = gameState.energy >= card.energy;
                 
-                var milestoneText = '';
-                if (p.progress >= 60) milestoneText = '<span class="milestone-tag">Can demo</span>';
-                if (p.progress >= 80) milestoneText += '<span class="milestone-tag">Can bid contracts</span>';
-                if (p.deployed) milestoneText = '<span class="milestone-tag">✅ DEPLOYED</span>';
-                
-                div.innerHTML = '<div style="flex: 1;"><strong>' + p.name + '</strong> ' + milestoneText + 
-                    '<div class="progress-bar"><div class="progress-fill" style="width: ' + p.progress + '%"></div></div></div>' +
-                    '<div style="font-weight: 700; color: #60a5fa;">' + p.progress + '%</div>';
-                
-                container.appendChild(div);
-            });
-        }
-
-        function renderMetrics() {
-            const container = document.getElementById('metricsDetails');
-            container.innerHTML = '<div class="product-row"><span>Team Size</span><strong>' + gameState.employees + '</strong></div>' +
-                '<div class="product-row"><span>Morale</span><strong>' + Math.round(gameState.morale) + '%</strong></div>' +
-                '<div class="product-row"><span>Reputation</span><strong>' + Math.round(gameState.reputation) + '%</strong></div>' +
-                '<div class="product-row"><span>DoD Relations</span><strong>' + Math.round(gameState.dodRelations) + '%</strong></div>' +
-                '<div class="product-row"><span>Monthly Revenue</span><strong>$' + (gameState.revenue/1000).toFixed(0) + 'K</strong></div>' +
-                '<div class="product-row"><span>Monthly Burn</span><strong>$' + (gameState.burnRate/1000).toFixed(0) + 'K</strong></div>' +
-                '<div class="product-row"><span>Funding Stage</span><strong>' + gameState.fundingRound + '</strong></div>';
-        }
-
-        function renderLog() {
-            const container = document.getElementById('logDetails');
-            container.innerHTML = '';
-            
-            gameState.log.slice(0, 5).forEach(function(entry) {
-                const div = document.createElement('div');
-                div.className = 'log-message ' + entry.type;
-                div.textContent = entry.msg;
-                container.appendChild(div);
-            });
-        }
-
-        function toggleDetails(section) {
-            const el = document.getElementById(section + 'Details');
-            el.classList.toggle('show');
-        }
-
-        function render() {
-            document.getElementById('cashDisplay').textContent = '$' + (gameState.cash / 1000000).toFixed(1) + 'M';
-            
-            const runway = Math.max(0, Math.floor(gameState.cash / gameState.burnRate));
-            const runwayEl = document.getElementById('runwayDisplay');
-            runwayEl.textContent = runway + ' months runway';
-            runwayEl.className = runway >= 6 ? 'runway-warning' : 'runway-warning runway-critical';
-            
-            document.getElementById('valuationDisplay').textContent = '$' + (gameState.valuation / 1000000).toFixed(0) + 'M';
-            const goalPercent = (gameState.valuation / 1000000000) * 100;
-            document.getElementById('goalBar').style.width = goalPercent + '%';
-            
-            document.getElementById('quarterDisplay').textContent = gameState.quarter;
-            document.getElementById('yearDisplay').textContent = gameState.year;
-            document.getElementById('apDisplay').textContent = gameState.actionPoints;
-            
-            renderActions();
-            renderProducts();
-            renderMetrics();
-            renderLog();
-        }
-
-        function advanceQuarter() {
-            addLog('━━━ END Q' + gameState.quarter + ' ━━━', 'system');
-            
-            gameState.cash += (gameState.revenue - gameState.burnRate);
-            addLog('Net cash flow: ' + ((gameState.revenue - gameState.burnRate) >= 0 ? '+' : '') + '$' + ((gameState.revenue - gameState.burnRate)/1000).toFixed(0) + 'K', 'system');
-            
-            const teamBoost = gameState.employees >= 15 ? 1.25 : 1.0;
-            Object.keys(gameState.products).forEach(function(key) {
-                const p = gameState.products[key];
-                if (p.progress > 0 && p.progress < 100 && !p.deployed) {
-                    p.progress = Math.min(100, p.progress + (8 * teamBoost));
-                    checkMilestones(key);
-                }
+                html += '<div class="card ' + (selected ? 'selected' : '') + '" onclick="toggleCard(\'' + cardId + '\')" style="' + (!canAfford ? 'opacity: 0.5;' : '') + '">';
+                html += '<div class="card-energy">' + card.energy + '</div>';
+                html += '<div class="card-title">' + card.name + '</div>';
+                html += '<div class="card-description">' + card.description + '</div>';
+                html += '</div>';
             });
             
-            gameState.morale = Math.max(20, gameState.morale - (Math.random() * 5 + 2));
-            gameState.actionPoints = gameState.maxActionPoints;
+            html += '</div>';
+            html += '<div style="text-align: center; margin-top: 2rem;">';
+            html += '<button class="btn btn-success" onclick="resolveCombat()">Play Selected Cards</button>';
+            html += '</div>';
             
-            if (gameState.quarter === 4) {
-                gameState.quarter = 1;
-                gameState.year++;
+            content.innerHTML = html;
+        }
+
+        function renderPathChoice() {
+            const content = document.getElementById('gameContent');
+            
+            let html = '<h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; text-align: center; color: #818cf8;">Choose Your Path Forward</h2>';
+            html += '<div class="path-choice">';
+            
+            html += '<div class="path-card" onclick="choosePath(\'safe\')">';
+            html += '<div class="path-icon">🛡️</div>';
+            html += '<div class="path-title">Safe Route</div>';
+            html += '<div class="path-description">No events, gain +$200K cash</div>';
+            html += '</div>';
+            
+            html += '<div class="path-card" onclick="choosePath(\'event\')">';
+            html += '<div class="path-icon">⚔️</div>';
+            html += '<div class="path-title">Challenge</div>';
+            html += '<div class="path-description">Face event, high reward on success</div>';
+            html += '</div>';
+            
+            html += '<div class="path-card" onclick="choosePath(\'reward\')">';
+            html += '<div class="path-icon">🎁</div>';
+            html += '<div class="path-title">Opportunity</div>';
+            html += '<div class="path-description">Add powerful card to deck</div>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            content.innerHTML = html;
+        }
+
+        function toggleCard(cardId) {
+            const card = cardLibrary[cardId];
+            const index = gameState.selectedCards.indexOf(cardId);
+            
+            if (index > -1) {
+                gameState.selectedCards.splice(index, 1);
             } else {
-                gameState.quarter++;
+                if (gameState.energy >= card.energy) {
+                    gameState.selectedCards.push(cardId);
+                }
             }
             
-            checkGameStatus();
-            render();
+            if (gameState.phase === 'event') {
+                renderEvent();
+            } else {
+                renderHand();
+            }
         }
 
-        function checkGameStatus() {
-            const runway = Math.floor(gameState.cash / gameState.burnRate);
-            if (runway <= 0 && gameState.cash < 0) {
-                addLog('💀 GAME OVER: Out of cash', 'error');
-                alert('Game Over! You ran out of money. Final valuation: $' + (gameState.valuation/1000000).toFixed(1) + 'M');
-                location.reload();
+        function skipCombat() {
+            log('Skipped event. No rewards gained.', 'info');
+            gameState.phase = 'path';
+            renderPathChoice();
+        }
+
+        function resolveCombat() {
+            let totalPower = 0;
+            let totalEnergyCost = 0;
+            
+            gameState.selectedCards.forEach(function(cardId) {
+                const card = cardLibrary[cardId];
+                totalEnergyCost += card.energy;
+                
+                Object.keys(card.effects).forEach(function(key) {
+                    const value = Math.abs(card.effects[key]);
+                    totalPower += value;
+                });
+            });
+            
+            if (totalEnergyCost > gameState.energy) {
+                log('Not enough energy!', 'error');
+                return;
             }
-            if (gameState.valuation >= 1000000000) {
-                addLog('🎉 VICTORY! Unicorn achieved!', 'success');
-                alert('You won! Reached $' + (gameState.valuation/1000000).toFixed(0) + 'M valuation!');
-                location.reload();
+            
+            gameState.energy -= totalEnergyCost;
+            
+            const success = totalPower >= gameState.currentEvent.threat;
+            
+            if (success) {
+                log(gameState.currentEvent.successText, 'success');
+                gameState.cash += 500000;
+                gameState.reputation = Math.min(100, gameState.reputation + 10);
+            } else {
+                log(gameState.currentEvent.failText, 'error');
+                gameState.morale = Math.max(0, gameState.morale - 10);
             }
+            
+            gameState.selectedCards.forEach(function(cardId) {
+                const index = gameState.hand.indexOf(cardId);
+                if (index > -1) {
+                    gameState.hand.splice(index, 1);
+                    gameState.discardPile.push(cardId);
+                }
+            });
+            gameState.selectedCards = [];
+            
+            updateDisplay();
+            gameState.phase = 'path';
+            renderPathChoice();
+        }
+
+        function choosePath(path) {
+            if (path === 'safe') {
+                gameState.cash += 200000;
+                log('Took safe route. +$200K cash.', 'success');
+            } else if (path === 'event') {
+                gameState.currentEvent = events[Math.floor(Math.random() * events.length)];
+                gameState.phase = 'event';
+                log('Facing: ' + gameState.currentEvent.title, 'warning');
+                updateDisplay();
+                renderEvent();
+                return;
+            } else if (path === 'reward') {
+                const newCard = ['hireEngineers', 'raiseFunding', 'dodOutreach'][Math.floor(Math.random() * 3)];
+                gameState.deck.push(newCard);
+                log('Added ' + cardLibrary[newCard].name + ' to deck!', 'success');
+            }
+            
+            endTurn();
+        }
+
+        function endTurn() {
+            gameState.hand.forEach(function(cardId) {
+                gameState.discardPile.push(cardId);
+            });
+            gameState.hand = [];
+            gameState.selectedCards = [];
+            
+            gameState.quarter++;
+            gameState.energy = gameState.maxEnergy;
+            
+            gameState.morale = Math.max(0, gameState.morale - 3);
+            gameState.product = Math.min(100, gameState.product + 5);
+            
+            if (gameState.cash < 0) {
+                showGameOver('Out of cash! Company failed.');
+                return;
+            }
+            if (gameState.morale <= 0) {
+                showGameOver('Team morale collapsed! Everyone quit.');
+                return;
+            }
+            if (gameState.product >= 100) {
+                showGameOver('Product launched! You reached $' + (gameState.cash / 1000000).toFixed(1) + 'M. Victory!');
+                return;
+            }
+            
+            log('Quarter ' + gameState.quarter + ' begins.', 'info');
+            updateDisplay();
+            drawHand();
+            renderHand();
+        }
+
+        function showGameOver(message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = '<div class="modal-content">' +
+                '<h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 1rem;">Game Over</h2>' +
+                '<p style="font-size: 1.2rem; margin-bottom: 2rem;">' + message + '</p>' +
+                '<button class="btn" onclick="location.reload()">Play Again</button>' +
+                '</div>';
+            document.body.appendChild(modal);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            addLog('Welcome to Vanguard Defense Technologies', 'system');
-            addLog('Goal: Reach $1B valuation. You have 3 actions per quarter.', 'system');
-            addLog('Starting with only $2M - every decision matters!', 'warning');
-            render();
+            log('Strategic Ascent initialized. Build your startup!', 'success');
+            initDeck();
+            drawHand();
+            updateDisplay();
+            renderHand();
         });
     </script>
 </body>
