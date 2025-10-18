@@ -50,6 +50,39 @@
             minGovRelations: 20
         };
 
+        const strategies = {
+            growth: {
+                name: "Aggressive Growth",
+                description: "Prioritize valuation and contracts. Higher rewards but higher risks.",
+                effects: { valuationMultiplier: 1.3, riskMultiplier: 1.2, cashPenalty: 1.1 }
+            },
+            balanced: {
+                name: "Balanced Approach", 
+                description: "Steady growth with managed risk. Middle ground on all metrics.",
+                effects: { valuationMultiplier: 1.0, riskMultiplier: 1.0, cashPenalty: 1.0 }
+            },
+            conservative: {
+                name: "Risk-Averse",
+                description: "Protect reputation and relationships. Slower growth but more stable.",
+                effects: { valuationMultiplier: 0.8, riskMultiplier: 0.7, cashPenalty: 0.9 }
+            }
+        };
+
+        const advisorTypes = {
+            cfo: {
+                conservative: { name: "Sarah Chen", specialty: "Cash management and financial stability", bias: "risk-averse" },
+                aggressive: { name: "Marcus Webb", specialty: "Growth financing and M&A", bias: "growth-focused" }
+            },
+            cto: {
+                innovative: { name: "Dr. Priya Sharma", specialty: "R&D and breakthrough technology", bias: "innovation-focused" },
+                practical: { name: "James Rodriguez", specialty: "Execution and delivery", bias: "execution-focused" }
+            },
+            lobbyist: {
+                connected: { name: "Victoria Hayes", specialty: "Government relations and contracts", bias: "relationship-focused" },
+                independent: { name: "Tom Castellano", specialty: "Industry reputation and ethics", bias: "reputation-focused" }
+            }
+        };
+
         const randomEvents = [
             {
                 title: "Key Employee Departure",
@@ -458,6 +491,351 @@
                         outcome: "The investigation exonerates the company but not the CFO. Your cooperation is appreciated."
                     }
                 ]
+            },
+            {
+                id: 16,
+                title: "Patent Infringement Lawsuit",
+                description: "A patent troll claims your core technology infringes on their portfolio. They're demanding $40M or a lengthy court battle.",
+                icon: "⚖️",
+                options: [
+                    {
+                        text: "Fight It: Take them to court",
+                        effects: { cash: -18, reputation: 10, innovation: 0 },
+                        outcome: "After 18 months, you win decisively. The patents are invalidated. Expensive but you stood your ground."
+                    },
+                    {
+                        text: "Settle: Pay $15M licensing fee",
+                        effects: { cash: -15, reputation: -5, innovation: -5 },
+                        outcome: "You settle to avoid distraction. It stings but you move on quickly."
+                    },
+                    {
+                        text: "Redesign: Engineer around the patents",
+                        effects: { cash: -10, innovation: 15, talent: -10 },
+                        outcome: "Your team finds a better technical solution. Turned a threat into an opportunity."
+                    }
+                ]
+            },
+            {
+                id: 17,
+                title: "Executive Burnout Crisis",
+                description: "Your COO, who's been working 80-hour weeks, suffers a health crisis. The team is exhausted and turnover is rising.",
+                icon: "😰",
+                options: [
+                    {
+                        text: "Mandatory Sabbaticals: Force breaks for leadership",
+                        effects: { cash: -8, talent: 15, innovation: 5, reputation: 10 },
+                        outcome: "Productivity dips short-term but morale soars. You're building a sustainable culture."
+                    },
+                    {
+                        text: "Hire More Executives: Distribute the load",
+                        effects: { cash: -12, talent: 10, govRelations: 5 },
+                        outcome: "Fresh blood brings new ideas and relieves pressure. Integration takes time but it works."
+                    },
+                    {
+                        text: "Push Through: Mission comes first",
+                        effects: { cash: 5, talent: -25, reputation: -15, innovation: -10 },
+                        outcome: "Three more senior leaders resign within a month. Your reputation as an employer tanks."
+                    }
+                ]
+            },
+            {
+                id: 18,
+                title: "AI Ethics Controversy",
+                description: "Media reports claim your AI-powered targeting system has unacceptable bias. Advocacy groups are calling for investigations.",
+                icon: "🤖",
+                options: [
+                    {
+                        text: "Independent Audit: Bring in external experts",
+                        effects: { cash: -10, reputation: 15, innovation: -5, govRelations: 10 },
+                        outcome: "The audit finds issues you fix proactively. Your transparency becomes a competitive advantage."
+                    },
+                    {
+                        text: "Double Down: Defend the technology",
+                        effects: { cash: 0, reputation: -20, govRelations: -15, talent: -15 },
+                        outcome: "Your defensive posture backfires. Top AI researchers refuse to work with you."
+                    },
+                    {
+                        text: "Pause Deployment: Voluntary moratorium",
+                        effects: { cash: -12, contracts: -1, reputation: 20, talent: 10 },
+                        outcome: "You take a financial hit but win praise for ethical leadership. Long-term trust grows."
+                    }
+                ]
+            },
+            {
+                id: 19,
+                title: "Foreign Investment Offer",
+                description: "A sovereign wealth fund from an allied nation offers $100M investment at favorable terms. CFIUS review required.",
+                icon: "💰",
+                options: [
+                    {
+                        text: "Accept Investment: Navigate CFIUS approval",
+                        effects: { cash: 100, valuation: 120, govRelations: -10, reputation: 5 },
+                        outcome: "CFIUS approves with conditions. You've got capital but increased scrutiny."
+                    },
+                    {
+                        text: "Decline: Stay domestic-only",
+                        effects: { cash: 0, govRelations: 15, valuation: 10 },
+                        outcome: "You prioritize simplicity and government trust over capital."
+                    },
+                    {
+                        text: "Counter-Offer: Seek US investors instead",
+                        effects: { cash: 60, valuation: 70, govRelations: 10, reputation: 10 },
+                        outcome: "You raise domestically at a lower valuation. Cleaner cap table, less money."
+                    }
+                ]
+            },
+            {
+                id: 20,
+                title: "Unionization Drive",
+                description: "Engineers are organizing. They're demanding better work-life balance, more transparency, and equity adjustments.",
+                icon: "✊",
+                options: [
+                    {
+                        text: "Embrace Union: Work collaboratively",
+                        effects: { cash: -10, talent: 20, innovation: 10, reputation: 15 },
+                        outcome: "You're one of the few defense contractors with a positive union relationship. Talent acquisition improves."
+                    },
+                    {
+                        text: "Fight Union: Anti-union campaign",
+                        effects: { cash: -15, talent: -30, reputation: -25, innovation: -15 },
+                        outcome: "You win the vote but at devastating cost. Best engineers leave. Culture is poisoned."
+                    },
+                    {
+                        text: "Preempt: Major compensation overhaul",
+                        effects: { cash: -20, talent: 15, innovation: 5, reputation: 10 },
+                        outcome: "You address concerns before the vote. Expensive but effective."
+                    }
+                ]
+            },
+            {
+                id: 21,
+                title: "Manufacturing Defect Recall",
+                description: "A critical component in 200 delivered units has a defect. No failures yet, but testing reveals potential safety issues.",
+                icon: "🔧",
+                options: [
+                    {
+                        text: "Immediate Recall: Proactive approach",
+                        effects: { cash: -25, reputation: 20, govRelations: 25, contracts: 0 },
+                        outcome: "The recall is expensive but earns enormous goodwill. You're seen as putting safety first."
+                    },
+                    {
+                        text: "Silent Fix: Repair during maintenance",
+                        effects: { cash: -8, reputation: -30, govRelations: -40, contracts: -2 },
+                        outcome: "A whistleblower leaks your decision. The cover-up scandal is catastrophic."
+                    },
+                    {
+                        text: "Engineering Analysis: Verify risk level first",
+                        effects: { cash: -5, reputation: 5, govRelations: 0 },
+                        outcome: "Analysis shows the risk is minimal. You implement enhanced monitoring instead of full recall."
+                    }
+                ]
+            },
+            {
+                id: 22,
+                title: "Competitor Acquires Your Supplier",
+                description: "Your largest competitor just bought your primary component supplier. They're now controlling your supply chain.",
+                icon: "🏭",
+                options: [
+                    {
+                        text: "Vertical Integration: Buy a manufacturer",
+                        effects: { cash: -40, innovation: 20, valuation: 50, contracts: 0 },
+                        outcome: "Expensive but you now control your destiny. Long-term strategic advantage."
+                    },
+                    {
+                        text: "Diversify Suppliers: Multi-source strategy",
+                        effects: { cash: -15, innovation: -5, reputation: 5 },
+                        outcome: "You spread risk but lose some economies of scale. Safer but not optimal."
+                    },
+                    {
+                        text: "Negotiate: Maintain relationship",
+                        effects: { cash: -5, reputation: -10, govRelations: 0 },
+                        outcome: "Your competitor plays fair... for now. You're vulnerable but avoid major expense."
+                    }
+                ]
+            },
+            {
+                id: 23,
+                title: "Data Center Ransomware Attack",
+                description: "Ransomware has encrypted your product data. Hackers demand $5M in Bitcoin. You have backups but they're 2 weeks old.",
+                icon: "🔐",
+                options: [
+                    {
+                        text: "Pay Ransom: Get data back quickly",
+                        effects: { cash: -5, reputation: -15, govRelations: -20 },
+                        outcome: "Data recovered but you've funded criminals. Government clients question your security."
+                    },
+                    {
+                        text: "Restore Backups: Take the delay",
+                        effects: { cash: -10, contracts: -1, reputation: 10, talent: -10 },
+                        outcome: "You lose 2 weeks of work. Team works overtime to catch up. The right call but painful."
+                    },
+                    {
+                        text: "Full Rebuild: Upgrade security simultaneously",
+                        effects: { cash: -20, innovation: 10, reputation: 15, govRelations: 10 },
+                        outcome: "You turn crisis into opportunity. Your new infrastructure is best-in-class."
+                    }
+                ]
+            },
+            {
+                id: 24,
+                title: "Breakthrough or Breakthrough?",
+                description: "Your research team claims a major breakthrough in quantum computing. But it needs validation and the lead scientist wants to publish.",
+                icon: "🔬",
+                options: [
+                    {
+                        text: "Allow Publication: Open science approach",
+                        effects: { cash: 10, innovation: 25, reputation: 25, valuation: 30, contracts: -1 },
+                        outcome: "You win prestige and top talent but give away competitive advantage. Some clients are unhappy."
+                    },
+                    {
+                        text: "Classify & Patent: Keep it proprietary",
+                        effects: { cash: -10, innovation: 30, valuation: 80, talent: -15, reputation: -10 },
+                        outcome: "Major commercial advantage but your lead scientist leaves for academia."
+                    },
+                    {
+                        text: "Validate First: Independent verification",
+                        effects: { cash: -8, innovation: 15, reputation: 15 },
+                        outcome: "Turns out the breakthrough needs more work. You avoided premature announcements."
+                    }
+                ]
+            },
+            {
+                id: 25,
+                title: "Congressional Budget Cuts",
+                description: "The defense budget is being slashed 15%. Programs are being cancelled. Your largest contract is under review.",
+                icon: "📉",
+                options: [
+                    {
+                        text: "Aggressive Lobbying: Fight for funding",
+                        effects: { cash: -12, govRelations: 15, contracts: 1, reputation: -10 },
+                        outcome: "Your lobbying works. Contract saved but you're seen as a typical defense contractor."
+                    },
+                    {
+                        text: "Pivot Commercial: Dual-use technology",
+                        effects: { cash: -15, innovation: 20, valuation: 40, contracts: -1 },
+                        outcome: "You successfully pivot some tech to commercial markets. Diversification achieved."
+                    },
+                    {
+                        text: "Downsize: Cut costs aggressively",
+                        effects: { cash: 15, talent: -30, innovation: -20, reputation: -15 },
+                        outcome: "You survive but lose key people and capabilities. A shell of what you were."
+                    }
+                ]
+            },
+            {
+                id: 26,
+                title: "Whistleblower Allegation",
+                description: "An employee reports suspected accounting fraud in your contracts division to the DOJ. Investigation launched.",
+                icon: "📢",
+                options: [
+                    {
+                        text: "Internal Investigation: Root out the truth",
+                        effects: { cash: -15, reputation: 10, govRelations: 15, talent: -10 },
+                        outcome: "You find legitimate issues and self-report. Painful but you maintain integrity."
+                    },
+                    {
+                        text: "Aggressive Defense: Attack credibility",
+                        effects: { cash: -20, reputation: -35, govRelations: -40, contracts: -2 },
+                        outcome: "The evidence proves the whistleblower right. Your reputation is destroyed."
+                    },
+                    {
+                        text: "Cooperate Fully: Maximum transparency",
+                        effects: { cash: -10, reputation: 20, govRelations: 25, talent: 5 },
+                        outcome: "Investigation clears the company. Your cooperation is noted positively."
+                    }
+                ]
+            },
+            {
+                id: 27,
+                title: "Key Technical Milestone Failure",
+                description: "Your flagship program just failed a critical technical demonstration in front of Pentagon officials. Confidence is shaken.",
+                icon: "💥",
+                options: [
+                    {
+                        text: "Root Cause Analysis: Systematic approach",
+                        effects: { cash: -8, innovation: 10, reputation: 5, govRelations: 5 },
+                        outcome: "You identify and fix the real issue. Takes time but restores confidence."
+                    },
+                    {
+                        text: "Quick Fix: Band-aid solution",
+                        effects: { cash: -3, innovation: -10, reputation: -15, govRelations: -15 },
+                        outcome: "The fix doesn't address root cause. Next demo also fails. Credibility shot."
+                    },
+                    {
+                        text: "Redesign: Admit fundamental flaw",
+                        effects: { cash: -25, innovation: 20, reputation: 15, govRelations: 10, contracts: -1 },
+                        outcome: "Admitting the problem and fixing it properly earns respect. Expensive but right."
+                    }
+                ]
+            },
+            {
+                id: 28,
+                title: "ESG Investment Pressure",
+                description: "Major institutional investors demand you adopt stringent environmental and social governance standards or they'll divest.",
+                icon: "🌱",
+                options: [
+                    {
+                        text: "Full ESG Commitment: Comprehensive program",
+                        effects: { cash: -18, reputation: 25, talent: 20, valuation: 40 },
+                        outcome: "You attract impact investors and mission-driven talent. Market loves it."
+                    },
+                    {
+                        text: "Minimal Compliance: Check the boxes",
+                        effects: { cash: -5, reputation: -10, talent: -5 },
+                        outcome: "You do the minimum. Investors see through it. Opportunity wasted."
+                    },
+                    {
+                        text: "Push Back: Defense of defense sector",
+                        effects: { cash: 0, reputation: -15, valuation: -20, talent: -10 },
+                        outcome: "Some investors appreciate your stance but most walk away. Access to capital suffers."
+                    }
+                ]
+            },
+            {
+                id: 29,
+                title: "Viral Social Media Crisis",
+                description: "A video of your weapons system in action goes viral with the caption 'This is what your tax dollars buy.' Public backlash is intense.",
+                icon: "📱",
+                options: [
+                    {
+                        text: "Transparent Engagement: Explain the mission",
+                        effects: { cash: -5, reputation: 10, talent: 5, govRelations: 10 },
+                        outcome: "Your thoughtful response thread gets shared widely. You win some hearts and minds."
+                    },
+                    {
+                        text: "No Comment: Let it blow over",
+                        effects: { cash: 0, reputation: -20, talent: -15 },
+                        outcome: "Silence is interpreted as guilt. The story dominates news cycles for weeks."
+                    },
+                    {
+                        text: "Counter-Campaign: Patriotic messaging",
+                        effects: { cash: -10, reputation: 5, govRelations: 15, talent: -5 },
+                        outcome: "Your campaign resonates with some but feels tone-deaf to others. Mixed results."
+                    }
+                ]
+            },
+            {
+                id: 30,
+                title: "Founder's Dilemma",
+                description: "Your co-founder wants to take the company in a radically different direction. The board is divided. This could split the company.",
+                icon: "🤝",
+                options: [
+                    {
+                        text: "Buy Them Out: Maintain your vision",
+                        effects: { cash: -35, talent: -15, valuation: 30, reputation: -5 },
+                        outcome: "Expensive and emotionally draining but you maintain control of your vision."
+                    },
+                    {
+                        text: "Compromise: Merge both visions",
+                        effects: { cash: -10, innovation: 15, talent: 10, reputation: 5 },
+                        outcome: "The hybrid approach is messy but shows both ideas have merit. Unity preserved."
+                    },
+                    {
+                        text: "Step Aside: Let them lead",
+                        effects: { cash: 20, valuation: -30, talent: -20, govRelations: -10 },
+                        outcome: "You take a board seat but lose operational control. Hard to watch from the sidelines."
+                    }
+                ]
             }
         ];
 
@@ -467,7 +845,7 @@
             if (!gameState.gameStarted) {
                 app.innerHTML = `
                     <div class="min-h-screen gradient-bg p-8 flex items-center justify-center">
-                        <div class="max-w-2xl w-full glass border border-blue-500/30 rounded-lg p-8 shadow-2xl">
+                        <div class="max-w-4xl w-full glass border border-blue-500/30 rounded-lg p-8 shadow-2xl">
                             <div class="text-center mb-8">
                                 <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
                                     DEFENSE STRATEGY SIMULATOR
@@ -481,13 +859,13 @@
                                     <div class="flex items-start gap-3">
                                         <span class="text-cyan-400 text-xl">🎯</span>
                                         <div>
-                                            <span class="font-semibold text-cyan-400">Objective:</span> Reach $${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters
+                                            <span class="font-semibold text-cyan-400">Objective:</span> Reach ${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-3">
                                         <span class="text-green-400 text-xl">💰</span>
                                         <div>
-                                            <span class="font-semibold text-green-400">Starting Capital:</span> $${gameState.cash}M
+                                            <span class="font-semibold text-green-400">Starting Capital:</span> ${gameState.cash}M
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-3">
@@ -499,28 +877,121 @@
                                 </div>
                             </div>
 
-                            <input
-                                type="text"
-                                id="companyNameInput"
-                                placeholder="Enter your company name..."
-                                class="w-full bg-slate-900/50 border border-blue-500/30 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 transition-colors mb-4"
-                            />
+                            <div class="bg-slate-900/50 rounded-lg p-6 mb-6 border border-red-500/20">
+                                <h2 class="text-xl font-semibold text-red-300 mb-4">FAILURE CONDITIONS</h2>
+                                <div class="grid grid-cols-2 gap-3 text-sm text-slate-300">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-400">💸</span>
+                                        <span>Cash reaches $0</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-400">📉</span>
+                                        <span>Reputation &lt; ${gameState.minReputation}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-400">👥</span>
+                                        <span>Talent &lt; ${gameState.minTalent}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-400">🏛️</span>
+                                        <span>Gov Relations &lt; ${gameState.minGovRelations}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-slate-300 font-semibold mb-2">Company Name</label>
+                                <input
+                                    type="text"
+                                    id="companyNameInput"
+                                    placeholder="Enter your company name..."
+                                    class="w-full bg-slate-900/50 border border-blue-500/30 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 transition-colors"
+                                />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-slate-300 font-semibold mb-2">Select Your Strategy</label>
+                                <div class="grid grid-cols-3 gap-3">
+                                    ${Object.keys(strategies).map(key => `
+                                        <button
+                                            onclick="selectStrategy('${key}')"
+                                            id="strategy-${key}"
+                                            class="strategy-btn bg-slate-900/50 border-2 border-blue-500/30 hover:border-cyan-400/60 rounded-lg p-4 text-left transition-all"
+                                        >
+                                            <div class="text-cyan-400 font-semibold mb-1">${strategies[key].name}</div>
+                                            <div class="text-slate-400 text-xs">${strategies[key].description}</div>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-slate-300 font-semibold mb-2">Select Your Advisors</label>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="text-sm text-slate-400 mb-1">Chief Financial Officer</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            ${Object.keys(advisorTypes.cfo).map(key => `
+                                                <button
+                                                    onclick="selectAdvisor('cfo', '${key}')"
+                                                    id="advisor-cfo-${key}"
+                                                    class="advisor-btn bg-slate-900/50 border border-blue-500/30 hover:border-cyan-400/60 rounded p-3 text-left text-sm transition-all"
+                                                >
+                                                    <div class="text-cyan-300 font-semibold">${advisorTypes.cfo[key].name}</div>
+                                                    <div class="text-slate-400 text-xs">${advisorTypes.cfo[key].specialty}</div>
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-slate-400 mb-1">Chief Technology Officer</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            ${Object.keys(advisorTypes.cto).map(key => `
+                                                <button
+                                                    onclick="selectAdvisor('cto', '${key}')"
+                                                    id="advisor-cto-${key}"
+                                                    class="advisor-btn bg-slate-900/50 border border-blue-500/30 hover:border-cyan-400/60 rounded p-3 text-left text-sm transition-all"
+                                                >
+                                                    <div class="text-cyan-300 font-semibold">${advisorTypes.cto[key].name}</div>
+                                                    <div class="text-slate-400 text-xs">${advisorTypes.cto[key].specialty}</div>
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-slate-400 mb-1">Government Relations Lead</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            ${Object.keys(advisorTypes.lobbyist).map(key => `
+                                                <button
+                                                    onclick="selectAdvisor('lobbyist', '${key}')"
+                                                    id="advisor-lobbyist-${key}"
+                                                    class="advisor-btn bg-slate-900/50 border border-blue-500/30 hover:border-cyan-400/60 rounded p-3 text-left text-sm transition-all"
+                                                >
+                                                    <div class="text-cyan-300 font-semibold">${advisorTypes.lobbyist[key].name}</div>
+                                                    <div class="text-slate-400 text-xs">${advisorTypes.lobbyist[key].specialty}</div>
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <button
                                 onclick="startGame()"
-                                class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50"
+                                class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                id="startButton"
+                                disabled
                             >
                                 LAUNCH COMPANY
                             </button>
+                            <div id="startError" class="text-red-400 text-sm text-center mt-2 hidden">
+                                Please enter a company name and select a strategy and all advisors
+                            </div>
                         </div>
                     </div>
                 `;
                 
-                document.getElementById('companyNameInput').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && e.target.value.trim()) {
-                        startGame();
-                    }
-                });
+                document.getElementById('companyNameInput').addEventListener('input', checkStartReady);
                 return;
             }
 
@@ -715,13 +1186,57 @@
             `;
         }
 
+        function selectStrategy(strategyKey) {
+            gameState.strategy = strategyKey;
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
+                btn.classList.remove('border-cyan-400', 'bg-cyan-900/30');
+                btn.classList.add('border-blue-500/30');
+            });
+            document.getElementById(`strategy-${strategyKey}`).classList.remove('border-blue-500/30');
+            document.getElementById(`strategy-${strategyKey}`).classList.add('border-cyan-400', 'bg-cyan-900/30');
+            checkStartReady();
+        }
+
+        function selectAdvisor(role, type) {
+            gameState.advisors[role] = type;
+            document.querySelectorAll(`.advisor-btn[id^="advisor-${role}-"]`).forEach(btn => {
+                btn.classList.remove('border-cyan-400', 'bg-cyan-900/30');
+                btn.classList.add('border-blue-500/30');
+            });
+            document.getElementById(`advisor-${role}-${type}`).classList.remove('border-blue-500/30');
+            document.getElementById(`advisor-${role}-${type}`).classList.add('border-cyan-400', 'bg-cyan-900/30');
+            checkStartReady();
+        }
+
+        function checkStartReady() {
+            const input = document.getElementById('companyNameInput');
+            const button = document.getElementById('startButton');
+            const error = document.getElementById('startError');
+            
+            const ready = input && input.value.trim() && 
+                         gameState.strategy && 
+                         gameState.advisors.cfo && 
+                         gameState.advisors.cto && 
+                         gameState.advisors.lobbyist;
+            
+            if (button) {
+                button.disabled = !ready;
+            }
+            if (error) {
+                error.classList.toggle('hidden', ready);
+            }
+        }
+
         function startGame() {
             const input = document.getElementById('companyNameInput');
-            const name = input.value.trim();
-            if (name) {
+            const name = input ? input.value.trim() : '';
+            if (name && gameState.strategy && gameState.advisors.cfo && gameState.advisors.cto && gameState.advisors.lobbyist) {
                 gameState.companyName = name;
                 gameState.gameStarted = true;
-                gameState.eventLog.push(`${name} founded. Target: $${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters.`);
+                const strategyName = strategies[gameState.strategy].name;
+                gameState.eventLog.push(`${name} founded with ${strategyName} strategy.`);
+                gameState.eventLog.push(`Target: ${gameState.targetValuation}M valuation in ${gameState.maxQuarters} quarters.`);
+                gameState.eventLog.push(`Advisory Team: ${advisorTypes.cfo[gameState.advisors.cfo].name} (CFO), ${advisorTypes.cto[gameState.advisors.cto].name} (CTO), ${advisorTypes.lobbyist[gameState.advisors.lobbyist].name} (Gov Relations)`);
                 presentNewScenario();
                 render();
             }
@@ -741,13 +1256,27 @@
 
         function makeDecision(optionIndex) {
             const option = gameState.currentScenario.options[optionIndex];
-            let effects = option.effects;
+            let effects = {...option.effects};
             let outcome = option.outcome;
 
-            // Check for random failure
-            if (option.failureChance && Math.random() < option.failureChance) {
-                effects = option.failureEffects;
+            // Apply strategy modifiers
+            const strategy = strategies[gameState.strategy];
+            if (effects.valuation) {
+                effects.valuation = Math.floor(effects.valuation * strategy.effects.valuationMultiplier);
+            }
+            if (effects.cash && effects.cash < 0) {
+                effects.cash = Math.floor(effects.cash * strategy.effects.cashPenalty);
+            }
+
+            // Check for random failure (modified by strategy)
+            const adjustedFailureChance = (option.failureChance || 0) * strategy.effects.riskMultiplier;
+            if (option.failureChance && Math.random() < adjustedFailureChance) {
+                effects = {...option.failureEffects};
                 outcome = option.failureOutcome;
+                // Apply strategy modifiers to failure effects too
+                if (effects.valuation) {
+                    effects.valuation = Math.floor(effects.valuation * strategy.effects.valuationMultiplier);
+                }
             }
 
             // Apply effects
@@ -767,9 +1296,9 @@
             const performanceMultiplier = (gameState.reputation + gameState.talent + gameState.govRelations + gameState.innovation) / 400;
             gameState.valuation += Math.floor(gameState.valuation * 0.05 * performanceMultiplier);
 
-            // Random event chance (25% each quarter)
+            // Random event chance (15% each quarter)
             let randomEventOccurred = false;
-            if (Math.random() < 0.25) {
+            if (Math.random() < 0.15) {
                 const randomEvent = randomEvents[Math.floor(Math.random() * randomEvents.length)];
                 gameState.valuation = Math.max(0, gameState.valuation + (randomEvent.effects.valuation || 0));
                 gameState.cash = Math.max(0, gameState.cash + (randomEvent.effects.cash || 0));
@@ -830,8 +1359,8 @@
             gameState.companyName = '';
             gameState.quarter = 1;
             gameState.valuation = 50;
-            gameState.targetValuation = 1000;
-            gameState.cash = 15;
+            gameState.targetValuation = 750;
+            gameState.cash = 18;
             gameState.reputation = 70;
             gameState.talent = 60;
             gameState.govRelations = 50;
@@ -845,6 +1374,12 @@
             gameState.minReputation = 25;
             gameState.minTalent = 25;
             gameState.minGovRelations = 20;
+            gameState.strategy = null;
+            gameState.advisors = {
+                cfo: null,
+                cto: null,
+                lobbyist: null
+            };
             render();
         }
 
